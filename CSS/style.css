@@ -43,3 +43,26 @@ body{
     color: antiquewhite;
     justify-content: space-between;
 }
+
+.post1{
+    display: flex;
+    border: 1px solid;
+    margin: 10px;
+    border-radius: 20px;
+}
+
+.post-sujet{
+    color: burlywood;
+}
+
+.post-texte{
+    color:ivory;
+}
+
+.nom{
+    color: bisque;
+}
+
+.sujet-text-info{
+    padding-right: 20px;
+}
