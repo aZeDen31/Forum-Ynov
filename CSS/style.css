@@ -13,9 +13,9 @@ header{
     padding: 20px;
     display: flex;
     background-color: rgb(71,71,71);
-    justify-content: center;
     justify-content: space-between;
-    align-items: center; 
+    align-items: center;
+    color: antiquewhite;
 }
 
 
@@ -36,4 +36,10 @@ body{
     display: inline-block;
     width: 62.94px;
     height: 62.94px;
+}
+
+.textes-header {
+    display: flex;
+    color: antiquewhite;
+    justify-content: space-between;
 }
