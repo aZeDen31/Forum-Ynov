@@ -13,6 +13,10 @@ func main() {
 
 func server(){
 	fileServer := http.FileServer(http.Dir("./html"))
+
+	fs := http.FileServer(http.Dir("./styles"))
+	http.Handle("/assets/", http.StripPrefix("/styles/", fs)) 
+
 	http.Handle("/", fileServer)
 
 	fmt.Println("clique sur le lien http://localhost:7000/")
