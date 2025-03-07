@@ -1,12 +1,12 @@
 .logo{
     border-radius: 10px;
-    width: 10%;
-    height: 10%;
+    width: 70px;
+    height: 40px;
 }
 
 .profile-pic{
-    width: 7%;
-    height: 7%;
+    width: 62.94px;
+    height: 62.94px;
 }
 
 header{
@@ -18,9 +18,7 @@ header{
     align-items: center; 
 }
 
-a {
-    display: inline-block;
-}
+
 
 body{
     padding: 0;
@@ -28,3 +26,14 @@ body{
     background-color: rgb(101, 101, 101);
 }
 
+.lien-logo {
+    display: inline-block;
+    width: 67.9px;
+    height: 36.8px;
+}
+
+.lien-profile {
+    display: inline-block;
+    width: 62.94px;
+    height: 62.94px;
+}
