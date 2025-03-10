@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"name": "Forum",
+			"path": ".."
+		},
+		{
+			"name": "html",
+			"path": "../../c++_training/html"
+		},
+		{
+			"name": "styles",
+			"path": "../../c++_training/styles"
+		}
+	],
+	"settings": {}
+}
