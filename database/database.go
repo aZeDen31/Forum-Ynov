@@ -3,60 +3,74 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
-	_ "github.com/mattn/go-sqlite3" 
+	_ "github.com/mattn/go-sqlite3"
 )
 
-func InitDB(dbPath string) (*sql.DB,error) {
-	// Connexion à la base de données (créée si elle n'existe pas) pour que ca ajoute directement a ma_base.db toutes les valeurs crées de la table
-	db, err := sql.Open("sqlite3", "ma_base.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+// Utilisateur représente un utilisateur de la base de données.
+type Utilisateur struct {
+	ID    int
+	Nom   string
+	Email string
+	Mdp   string
+}
 
-	// Création d'une table , cela permet de créer une table avec id , nom , email et mdp
+// InitDB initialise la base de données et crée la table "utilisateurs" si elle n'existe pas.
+func InitDB(dbPath string) (*sql.DB, error) {
+	// Connexion à la base de données
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Création de la table
 	createTable := `
 	CREATE TABLE IF NOT EXISTS utilisateurs (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		nom TEXT NOT NULL,
 		email TEXT UNIQUE NOT NULL,
-		mdp TEXT UNIQUE NOT NULL
+		mdp TEXT NOT NULL
 	);`
 	_, err = db.Exec(createTable)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+
+	// Vérifier la connexion
 	err = db.Ping()
-    if err != nil {
-        log.Fatal(err)
-    }
-    return db
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("Base de données initialisée avec succès.")
+	return db, nil
 }
 
-func InsertUser(db *sql.DB, nom, mail, mdp string)error {
-
-	// Insertion d'un utilisateur , permet donc de inserer les valeurs nom email et mdp
-	query := "INSERT INTO users (name, email, password) VALUES (?, ?, ?)"
-	_, err := db.Exec(query, name, email, password) // We are ignoring the Result returned
+// InsertUser insère un nouvel utilisateur dans la table "utilisateurs".
+func InsertUser(db *sql.DB, nom, email, mdp string) error {
+	query := "INSERT INTO utilisateurs (nom, email, mdp) VALUES (?, ?, ?)"
+	_, err := db.Exec(query, nom, email, mdp)
 	return err
 }
 
-	// Lecture des utilisateurs
+// LectureUtilisateurs récupère et affiche les utilisateurs de la table "utilisateurs".
+func LectureUtilisateurs(db *sql.DB) ([]Utilisateur, error) {
 	rows, err := db.Query("SELECT id, nom, email, mdp FROM utilisateurs")
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer rows.Close()
 
-	fmt.Println("Utilisateurs :")
+	var utilisateurs []Utilisateur
+
 	for rows.Next() {
-		var id int
-		var nom, email, mdp string
-		err = rows.Scan(&id, &nom, &email, &mdp)
+		var u Utilisateur
+		err = rows.Scan(&u.ID, &u.Nom, &u.Email, &u.Mdp)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
-		fmt.Printf("%d : %s (%s) mdp: %s\n", id, nom, email, mdp)
+		utilisateurs = append(utilisateurs, u)
 	}
+
+	return utilisateurs, nil
+}

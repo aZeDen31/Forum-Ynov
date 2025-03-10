@@ -23,8 +23,12 @@ func main() {
 	}
 
 	// Lecture des utilisateurs
-	err = database.LectureUtilisateurs(db)
+	utilisateurs, err := database.LectureUtilisateurs(db)
 	if err != nil {
-		log.Fatal("Erreur lors de la lecture des utilisateurs :", err)
+		log.Fatal("Erreur lors de la récupération des utilisateurs:", err)
+	}
+
+	for _, u := range utilisateurs {
+		fmt.Printf("ID: %d | Nom: %s | Email: %s | MDP: %s\n", u.ID, u.Nom, u.Email, u.Mdp)
 	}
 }
