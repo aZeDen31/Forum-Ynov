@@ -68,12 +68,14 @@ body{
 }
 
 form{
-    justify-items:center;
     gap: 20px;
     padding: 50px;
     background-color: lightgray;
     width: fit-content;
     border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content:center;
 }
 
 #mdp,#Mail,#mdp2{
@@ -84,16 +86,20 @@ form{
 
 .formulaire{
     margin-bottom:10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .formulaire1{
     display: flex;
     justify-content: center;
-    margin: 100px;
+    margin: 50px;
 }
 
 #bouton{
     padding: 5px;
+    width: 100px;
 }
 
 #logoCo{
@@ -106,4 +112,11 @@ form{
     flex-direction: column;
     align-items: center;
     padding-top: 50px;
+}
+
+.buttonlink{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
