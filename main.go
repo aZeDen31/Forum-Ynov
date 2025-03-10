@@ -102,13 +102,8 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmpl.Execute(w, nil)
-=========
-	"forum-ynov/database"
-	"fmt"
-	"log"
-)
-
-func main() {
+}
+func initdatabase(){
 	// Initialisation de la base de données
 	db, err := database.InitDB("ma_base.db")
 	if err != nil {
@@ -134,3 +129,4 @@ func main() {
 		fmt.Printf("ID: %d | Nom: %s | Email: %s | MDP: %s\n", u.ID, u.Nom, u.Email, u.Mdp)
 	}
 }
+
