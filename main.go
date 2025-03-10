@@ -48,20 +48,26 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 
 func Signup(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		username := r.FormValue("username")
-		password := r.FormValue("password")
+		mail := r.FormValue("mail") //note a moi même FormValue récupere la categorie name
+		password := r.FormValue("mdp")
+		password2 := r.FormValue("mdp2")
 
+		if password != password2 {
+			fmt.Fprintf(w, "Not the same password ")
+		}else{
 		// faut insérer ici la query vers la db
 		// penser a check si user existe déjà
 		//si non l'add a la db
-		fmt.Printf("Username: %s, Password: %s\n", username, password)
+		fmt.Printf("Username: %s, Password: %s\n", mail, password)
 		if true {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		} else {
 			fmt.Fprintf(w, "Error user is already registered")
 		}
+		
 	}
+}
 
 	tmpl, err := template.ParseFiles("html/inscription.html")
 	if err != nil {
