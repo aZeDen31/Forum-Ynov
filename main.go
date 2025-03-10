@@ -102,9 +102,13 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmpl.Execute(w, nil)
-}
+=========
+	"forum-ynov/database"
+	"fmt"
+	"log"
+)
 
-func initdatabase() {
+func main() {
 	// Initialisation de la base de données
 	db, err := database.InitDB("ma_base.db")
 	if err != nil {
@@ -115,7 +119,7 @@ func initdatabase() {
 	fmt.Println("Base de données initialisée et prête à être utilisée !")
 
 	// Exemple d'ajout d'un utilisateur
-	err = database.InsertUser(db, "Alice", "alice@example.com", "motdepasse123")
+	err = database.InsertUser(db, "Alice", "caca3@example.com", "motdepasse123")
 	if err != nil {
 		log.Fatal("Erreur lors de l'ajout de l'utilisateur :", err)
 	}
