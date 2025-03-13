@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	
+		"golang.org/x/crypto/bcrypt"
 	 _ "github.com/mattn/go-sqlite3"
 )
 
@@ -48,8 +48,15 @@ func InitDB(dbPath string) (*sql.DB, error) {
 
 // InsertUser insère un nouvel utilisateur dans la table "utilisateurs".
 func InsertUser(db *sql.DB, nom, email, mdp string) error {
+	// Hachage du mot de passe
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(mdp), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("Erreur lors du hachage du mot de passe: %v", err)
+	}
+
+	// Insertion de l'utilisateur avec le mot de passe haché
 	query := "INSERT INTO utilisateurs (nom, email, mdp) VALUES (?, ?, ?)"
-	_, err := db.Exec(query, nom, email, mdp)
+	_, err = db.Exec(query, nom, email, string(hashedPassword))
 	return err
 }
 
