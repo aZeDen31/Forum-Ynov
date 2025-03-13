@@ -7,25 +7,22 @@
     <title>Forum</title>
 </head>
 
-<header>
-    <a href="http://127.0.0.1:5500/HTML/index.html" class="lien-logo">
-        <img src="../img/2chad-removebg.png" alt="logo" class="logo">
-    </a>
-    <p>Récent</p>
-    <p>Contact</p> 
-    <a href="http://127.0.0.1:5500/HTML/profile.html" class="lien-profile">
-        <img src="../img/placeholder-profile.png" alt="profile-pic" class="profile-pic">
-    </a>
-</header>
-<body>
-    
-    <form action="post">
-        <div class="formulaire">
-            <input type="text" id="Mail" name="E-mail"  placeholder="Entrez votre E-mail">
-            <input type="text" id="mdp" name="Mot de passe" placeholder="Entrez votre mot de passe">
-        </div>
-        <input type="button" value="Connexion">
-    </form>
 
+<body>
+    <div class="imageform">
+        <img src="../img/2chad-removebg.png" alt="logo" class="logo" id="logoCo">
+        <div class="formulaire1">
+            <form action="post">
+                <div class="formulaire">
+                    <input type="text" id="Mail" name="E-mail"  placeholder="Entrez votre E-mail">
+                    <input type="text" id="mdp" name="Mot de passe" placeholder="Entrez votre mot de passe">
+                </div>
+                <div class="buttonlink">
+                    <input type="button" value="Connexion" id="bouton">
+                    <a href="http://127.0.0.1:5500/HTML/inscription.html">Pas encore de compte ? Inscrivez vous</a>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
