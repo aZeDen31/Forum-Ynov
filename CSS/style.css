@@ -130,3 +130,29 @@ form{
     justify-content: center;
     align-items: center;
 }
+
+#infosProfil{
+    display: flex;
+    justify-content: center;
+    margin: 30px;
+}
+
+#infosProfil2{
+    display: flex;
+    justify-content: center;
+    width: 50%;
+    border-radius: 20px;
+    background-color: rgb(135, 133, 149);
+}
+
+#texteProfil{
+    height: auto;
+    width: auto;
+    color: aliceblue;
+    margin-top: 20px;
+}
+#texteProfil h4,
+#texteProfil p {
+    margin: 0;
+    padding: 0;
+}
