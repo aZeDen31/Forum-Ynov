@@ -3,8 +3,8 @@ package database
 import (
 	"database/sql"
 	"fmt"
-
-	_ "github.com/mattn/go-sqlite3"
+	
+	 _ "github.com/mattn/go-sqlite3"
 )
 
 // Utilisateur représente un utilisateur de la base de données.
@@ -52,6 +52,7 @@ func InsertUser(db *sql.DB, nom, email, mdp string) error {
 	_, err := db.Exec(query, nom, email, mdp)
 	return err
 }
+
 
 // LectureUtilisateurs récupère et affiche les utilisateurs de la table "utilisateurs".
 func LectureUtilisateurs(db *sql.DB) ([]Utilisateur, error) {
