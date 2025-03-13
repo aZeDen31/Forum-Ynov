@@ -92,7 +92,7 @@ func FindUser(db *sql.DB, email string, mdp string) (Utilisateur, int) {
     
     err := row.Scan(&utilisateur.ID, &utilisateur.Nom, &utilisateur.Email, &utilisateur.Mdp)
     
- 
+
     if err != nil {
         if err == sql.ErrNoRows { //erreur serveur 
 
@@ -102,9 +102,10 @@ func FindUser(db *sql.DB, email string, mdp string) (Utilisateur, int) {
     }
     
     
-    if utilisateur.Mdp != mdp {
-        return utilisateur, 2 // Mot de passe incorrect
-    }
+	err = bcrypt.CompareHashAndPassword([]byte(utilisateur.Mdp), []byte(mdp))
+	if err != nil {
+		return utilisateur, 2 // Mot de passe incorrect
+	}
     
     return utilisateur, 0
 }
