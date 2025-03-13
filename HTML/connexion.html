@@ -19,9 +19,12 @@
 </header>
 <body>
     
-    <form action="post">
-        <input type="text" id="Mail" name="mail"  placeholder="Entrez votre E-mail">
-        <input type="text" id="mdp" name="mdp" placeholder="Entrez votre mot de passe">
+    <form method="post" action = "/login">
+        <div class="formulaire">
+            <input type="email" id="Mail" name="mail" placeholder="Entrez votre E-mail" required>
+            <input type="password" id="mdp" name="mdp" placeholder="Entrez votre mot de passe" required>
+        </div>
+        <input type="submit" value="Connexion">
     </form>
 
 </body>
