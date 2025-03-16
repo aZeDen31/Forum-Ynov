@@ -2,21 +2,28 @@ package main
 
 import (
 	"database/sql"
+	"encoding/base64"
+	"errors"
 	"fmt"
 	"forum-ynov/database"
 	"html/template"
 	"log"
 	"net/http"
-	"errors"
-	"encoding/base64"
 )
 
 // variable global sinon c chiant
 var DB *sql.DB
 var err error
 
+type UserData struct {
+	Username string //faudra ajouter des trucs c ce que je passe a la template profile
+}
+
+var userdata  UserData
+
 func main() {
 	// Initialisation de la base de données
+	userdata.Username = "Non connecté"
 	DB, err = database.InitDB("ma_base.db")
 	if err != nil {
 		log.Fatal("Erreur d'initialisation de la base de données:", err)
@@ -37,7 +44,6 @@ func main() {
 }
 
 func server() {
-	fileServer := http.FileServer(http.Dir("./HTML"))
 
 	fs := http.FileServer(http.Dir("./CSS"))
 	http.Handle("/CSS/", http.StripPrefix("/CSS/", fs))
@@ -45,7 +51,7 @@ func server() {
 	fd := http.FileServer(http.Dir("./img"))
 	http.Handle("/img/", http.StripPrefix("/img/", fd))
 
-	http.Handle("/", fileServer)
+	http.HandleFunc("/", IndexHandler)
 	http.HandleFunc("/login", LoginPage)
 	http.HandleFunc("/register", Signup)
 	http.HandleFunc("/profile", profileHandler)
@@ -61,8 +67,14 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
+
 	tmpl := template.Must(template.ParseFiles("HTML/profile.html"))
-	tmpl.Execute(w, nil)
+	tmpl.Execute(w, userdata)
+}
+
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles("HTML/index.html"))
+	tmpl.Execute(w, userdata)
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +119,6 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		mail := r.FormValue("mail")
 		password := r.FormValue("mdp")
 
-
 		fmt.Printf("Username: %s, Password: %s\n", mail, password)
 
 		if mail == "" || password == "" {
@@ -120,8 +131,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Error: %v", err)
 			return
 		}
-		setUserCookie(user,w ,r)
-				
+		setUserCookie(user, w, r)
 
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 		return
@@ -135,44 +145,47 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
-func setUserCookie(user database.Utilisateur , w http.ResponseWriter, r *http.Request) { //je peux pas appeller la fonction setCOokie car setCokkie existe déjà
+func setUserCookie(user database.Utilisateur, w http.ResponseWriter, r *http.Request) { //je peux pas appeller la fonction setCOokie car setCokkie existe déjà
 
 	cookie := http.Cookie{
 		Name:     "user",
 		Value:    user.Nom,
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   3600, //ttl du cookie 
+		MaxAge:   3600, //ttl du cookie
 	}
-		Write64(w, cookie) //donne le cookie qu'on vient de faire au client  
-	
+	Write64(w, cookie) //donne le cookie qu'on vient de faire au client
+
+	username, _ := Read64(r, "user")
+
+	userdata.Username = username
 }
 
-func checkCookie(w http.ResponseWriter, r *http.Request) (int){
+func checkCookie(w http.ResponseWriter, r *http.Request) int {
 
 	_, err := r.Cookie("user")
 
 	if err != nil {
-        switch {
-        case errors.Is(err, http.ErrNoCookie):
-            return 1
-        default:
-            log.Println(err)
-            http.Error(w, "server error", http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, http.ErrNoCookie):
+			return 1
+		default:
+			log.Println(err)
+			http.Error(w, "server error", http.StatusInternalServerError)
 			return 2
-        }
-    }
-		return 0
-} 
-	
-func Write64(w http.ResponseWriter, cookie http.Cookie) error { //transforme le cookie en b64 
-	cookie.Value = base64.URLEncoding.EncodeToString([]byte(cookie.Value))
-
-	http.SetCookie(w, &cookie) //pointeur pour changer idrectement la variable car elle n'est pas global 
-	return nil 
+		}
+	}
+	return 0
 }
 
-func Read64(r *http.Request, name string ) (string, error){ //lit le cookie en b6
+func Write64(w http.ResponseWriter, cookie http.Cookie) error { //transforme le cookie en b64
+	cookie.Value = base64.URLEncoding.EncodeToString([]byte(cookie.Value))
+
+	http.SetCookie(w, &cookie) //pointeur pour changer idrectement la variable car elle n'est pas global
+	return nil
+}
+
+func Read64(r *http.Request, name string) (string, error) { //lit le cookie en b6
 	cookie, err := r.Cookie(name)
 	if err != nil {
 		return "", err
@@ -182,5 +195,5 @@ func Read64(r *http.Request, name string ) (string, error){ //lit le cookie en b
 		return "", err
 	}
 	return string(decoded), nil
-	
+
 }
