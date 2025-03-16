@@ -4,20 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../CSS/style.css">
-    <title>Forum - Connexion</title>
+    <title>Forum - Inscription</title>
 </head>
 <body>
     <div class="imageform">
         <img src="../img/2chad-removebg.png" alt="logo" class="logo" id="logoCo">
         <div class="formulaire1">
-            <form method="post" action="/login">
+            <form method="post" action="/register">
                 <div class="formulaire">
-                    <input type="email" id="Mail" name="mail" placeholder="Entrez votre E-mail" required>
+                    <input type="text" id="username" name="username" placeholder="Entrez votre pseudonyme" required/>
+                    <input type="email" id="Mail" name="mail" placeholder="Entrez votre E-mail" required/>
                     <input type="password" id="mdp" name="mdp" placeholder="Entrez votre mot de passe" required>
+                    <input type="password" id="mdp2" name="mdp2" placeholder="Confirmez votre mot de passe" required>
                 </div>
                 <div class="buttonlink">
-                    <button type="submit" id="bouton">Connexion</button>
-                    <a href="inscription.html">Pas encore de compte ? Inscrivez vous</a>
+                    <button type="submit" id="bouton">Inscription</button>
+                    {{if .Error}}
+                    <p>{{.Error}}</p>
+                    {{end}}
+                    <a href="/login">Déjà inscrit ? Connectez-vous</a>
                 </div>
             </form>
         </div>

@@ -16,10 +16,11 @@ var DB *sql.DB
 var err error
 
 type UserData struct {
-	Username string //faudra ajouter des trucs c ce que je passe a la template profile
+	Username string
+	Error    string //faudra ajouter des trucs c ce que je passe a la template profile
 }
 
-var userdata  UserData
+var userdata UserData
 
 func main() {
 	// Initialisation de la base de données
@@ -73,11 +74,14 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	checkCookie(w, r)
 	tmpl := template.Must(template.ParseFiles("HTML/index.html"))
 	tmpl.Execute(w, userdata)
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("HTML/inscription.html")
+
 	if r.Method == "POST" {
 		username := r.FormValue("username")
 		mail := r.FormValue("mail")
@@ -85,36 +89,39 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		password2 := r.FormValue("mdp2")
 
 		if mail == "" || password == "" || password2 == "" || username == "" {
-			fmt.Fprintf(w, "Please fill in all fields")
+			userdata.Error = "Veuillez remplir tous les champs"
+			tmpl.Execute(w, userdata)
 			return
 		}
 
 		if password != password2 {
-			fmt.Fprintf(w, "Not the same password ")
+			userdata.Error = "Les mots de passe ne correspondent pas"
+			tmpl.Execute(w, userdata)
 		} else {
 
 			err := database.InsertUser(DB, username, mail, password)
 			if err != nil {
-				fmt.Fprintf(w, "Error registering user: %v", err)
-				return
+				userdata.Error = "Email / username déjà utilisé" //oui c pas safe mais ntm je fait pas une double auth
+				tmpl.Execute(w, userdata)
 			}
-
+			userdata.Error = ""
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 
 		}
 	} else {
 		// Si ce n'est pas une requête POST, afficher le formulaire
-		tmpl, err := template.ParseFiles("HTML/inscription.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		tmpl, _ := template.ParseFiles("HTML/inscription.html")
 		tmpl.Execute(w, nil)
 	}
 }
 
 func LoginPage(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("HTML/connexion.html")
 	if r.Method == "POST" {
 		mail := r.FormValue("mail")
 		password := r.FormValue("mdp")
@@ -122,27 +129,28 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Username: %s, Password: %s\n", mail, password)
 
 		if mail == "" || password == "" {
-			fmt.Fprintf(w, "Please fill in all fields")
+			userdata.Error = "Veuillez remplir tous les champs"
+			tmpl.Execute(w, userdata)
 			return
 		}
 
 		user, err := database.FindUser(DB, mail, password)
 		if err != 0 {
-			fmt.Fprintf(w, "Error: %v", err)
+			userdata.Error = "email / mdp invalide "
+			tmpl.Execute(w, userdata)
 			return
 		}
 		setUserCookie(user, w, r)
-
+		userdata.Error = ""
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 		return
 	}
 
-	tmpl, err := template.ParseFiles("HTML/connexion.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, nil)
+	tmpl.Execute(w, userdata)
 }
 
 func setUserCookie(user database.Utilisateur, w http.ResponseWriter, r *http.Request) { //je peux pas appeller la fonction setCOokie car setCokkie existe déjà
@@ -155,10 +163,6 @@ func setUserCookie(user database.Utilisateur, w http.ResponseWriter, r *http.Req
 		MaxAge:   3600, //ttl du cookie
 	}
 	Write64(w, cookie) //donne le cookie qu'on vient de faire au client
-
-	username, _ := Read64(r, "user")
-
-	userdata.Username = username
 }
 
 func checkCookie(w http.ResponseWriter, r *http.Request) int {
@@ -166,6 +170,7 @@ func checkCookie(w http.ResponseWriter, r *http.Request) int {
 	_, err := r.Cookie("user")
 
 	if err != nil {
+		userdata.Username = "Non connécté"
 		switch {
 		case errors.Is(err, http.ErrNoCookie):
 			return 1
@@ -175,6 +180,9 @@ func checkCookie(w http.ResponseWriter, r *http.Request) int {
 			return 2
 		}
 	}
+	username, _ := Read64(r, "user")
+
+	userdata.Username = username
 	return 0
 }
 

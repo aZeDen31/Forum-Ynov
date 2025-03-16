@@ -17,7 +17,10 @@
                 </div>
                 <div class="buttonlink">
                     <button type="submit" id="bouton">Connexion</button>
-                    <a href="inscription.html">Pas encore de compte ? Inscrivez vous</a>
+                    <a href="/register">Pas encore de compte ? Inscrivez vous</a>
+                    {{if .Error}}
+                        <p>{{.Error}}</p>
+                    {{end}}
                 </div>
             </form>
         </div>
