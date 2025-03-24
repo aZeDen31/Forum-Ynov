@@ -155,13 +155,7 @@ func LecturePost(db *sql.DB) ([]Post, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	rows, err := db.Query("SELECT id, text, like, dislike FROM post")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 
-	var posts []Post
 	var posts []Post
 
 	for rows.Next() {
@@ -172,16 +166,7 @@ func LecturePost(db *sql.DB) ([]Post, error) {
 		}
 		posts = append(posts, p)
 	}
-	for rows.Next() {
-		var p Post
-		err = rows.Scan(&p.ID, &p.Text, &p.like, &p.dislike)
-		if err != nil {
-			return nil, err
-		}
-		posts = append(posts, p)
-	}
 
-	return posts, nil
 	return posts, nil
 }
 
