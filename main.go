@@ -205,3 +205,11 @@ func Read64(r *http.Request, name string) (string, error) { //lit le cookie en b
 	return string(decoded), nil
 
 }
+
+func Like(w http.ResponseWriter, r *http.Request, id int) {
+	database.Insertlike(DB, 1, id)
+}
+
+func Dislike(w http.ResponseWriter, r *http.Request, id int) {
+	database.Insertdislike(DB, 1, id)
+}
