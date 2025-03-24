@@ -3,8 +3,9 @@ package database
 import (
 	"database/sql"
 	"fmt"
-		"golang.org/x/crypto/bcrypt"
-	 _ "github.com/mattn/go-sqlite3"
+
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Utilisateur représente un utilisateur de la base de données.
@@ -13,6 +14,11 @@ type Utilisateur struct {
 	Nom   string
 	Email string
 	Mdp   string
+}
+
+type Post struct {
+    ID   int
+    Text string
 }
 
 // InitDB initialise la base de données et crée la table "utilisateurs" si elle n'existe pas.
@@ -29,9 +35,24 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		nom TEXT NOT NULL,
 		email TEXT UNIQUE NOT NULL,
-		mdp TEXT NOT NULL
+		mdp VARCHAR(40) NOT NULL
 	);`
 	_, err = db.Exec(createTable)
+	if err != nil {
+		return nil, err
+	}
+
+	//Creation de la table pour les posts
+	createTablepost := `
+	CREATE TABLE IF NOT EXISTS posts (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		utilisateur_id INTEGER NOT NULL,
+		"text" VARCHAR(256) NOT NULL,
+		like INT NOT NULL,
+		dislke INT NOT NULL,
+		FOREIGN KEY(utilisateur_id) REFERENCES sociétés(id)
+	);`
+	_, err = db.Exec(createTablepost)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +81,6 @@ func InsertUser(db *sql.DB, nom, email, mdp string) error {
 	return err
 }
 
-
 // LectureUtilisateurs récupère et affiche les utilisateurs de la table "utilisateurs".
 func LectureUtilisateurs(db *sql.DB) ([]Utilisateur, error) {
 	rows, err := db.Query("SELECT id, nom, email, mdp FROM utilisateurs")
@@ -83,29 +103,57 @@ func LectureUtilisateurs(db *sql.DB) ([]Utilisateur, error) {
 	return utilisateurs, nil
 }
 
-func FindUser(db *sql.DB, email string, mdp string) (Utilisateur, int) {
+func FindUser(db *sql.DB, email string, mdp string) (Utilisateur, int) { //LOGIN
 
-    var utilisateur Utilisateur
-    
-	//A noter peux pas utiliser db.Exec si il y'a une value de return 
-    row := db.QueryRow("SELECT id, nom, email, mdp FROM utilisateurs WHERE email = ?", email)
-    
-    err := row.Scan(&utilisateur.ID, &utilisateur.Nom, &utilisateur.Email, &utilisateur.Mdp)
-    
+	var utilisateur Utilisateur
 
-    if err != nil {
-        if err == sql.ErrNoRows { //erreur serveur 
+	//A noter peux pas utiliser db.Exec si il y'a une value de return
+	row := db.QueryRow("SELECT id, nom, email, mdp FROM utilisateurs WHERE email = ?", email)
 
-            return utilisateur, 1
-        }
-        return utilisateur, 3
-    }
-    
-    
+	err := row.Scan(&utilisateur.ID, &utilisateur.Nom, &utilisateur.Email, &utilisateur.Mdp)
+
+	if err != nil {
+		if err == sql.ErrNoRows { //erreur serveur
+
+			return utilisateur, 1
+		}
+		return utilisateur, 3
+	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(utilisateur.Mdp), []byte(mdp))
 	if err != nil {
 		return utilisateur, 2 // Mot de passe incorrect
 	}
-    
-    return utilisateur, 0
+
+	return utilisateur, 0
+}
+
+// Insertpost insère un nouvel message dans la table "post".
+func Insertpost(db *sql.DB, text string) error {
+
+	query := "INSERT INTO post (text) VALUES (?)"
+	_, err := db.Exec(query, text)
+	return err
+}
+
+// LecturePost récupère et affiche les messages de la table "post".
+func LecturePost(db *sql.DB) ([]Post, error) {
+    rows, err := db.Query("SELECT id, text FROM post")
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    var posts []Post
+
+    for rows.Next() {
+        var p Post
+        err = rows.Scan(&p.ID, &p.Text)
+        if err != nil {
+            return nil, err
+        }
+        posts = append(posts, p)
+    }
+
+    return posts, nil
 }
