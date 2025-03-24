@@ -17,8 +17,10 @@ type Utilisateur struct {
 }
 
 type Post struct {
-    ID   int
-    Text string
+	ID      int
+	Text    string
+	like    int
+	dislike int
 }
 
 // InitDB initialise la base de données et crée la table "utilisateurs" si elle n'existe pas.
@@ -72,7 +74,7 @@ func InsertUser(db *sql.DB, nom, email, mdp string) error {
 	// Hachage du mot de passe
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(mdp), bcrypt.DefaultCost)
 	if err != nil {
-		return fmt.Errorf("Erreur lors du hachage du mot de passe: %v", err)
+		return fmt.Errorf("erreur lors du hachage du mot de passe: %v", err)
 	}
 
 	// Insertion de l'utilisateur avec le mot de passe haché
@@ -135,25 +137,35 @@ func Insertpost(db *sql.DB, text string) error {
 	_, err := db.Exec(query, text)
 	return err
 }
+func Insertlike(db *sql.DB, like int, id int) error {
+	query := "UPDATE posts SET like = like + 1 WHERE id = ?"
+	_, err := db.Exec(query, id)
+	return err
+}
+func Insertdislike(db *sql.DB, dislike int, id int) error {
+	query := "UPDATE posts SET dislike = dislike + 1 WHERE id = ?"
+	_, err := db.Exec(query, id)
+	return err
+}
 
 // LecturePost récupère et affiche les messages de la table "post".
 func LecturePost(db *sql.DB) ([]Post, error) {
-    rows, err := db.Query("SELECT id, text FROM post")
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := db.Query("SELECT id, text, like, dislike FROM post")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var posts []Post
+	var posts []Post
 
-    for rows.Next() {
-        var p Post
-        err = rows.Scan(&p.ID, &p.Text)
-        if err != nil {
-            return nil, err
-        }
-        posts = append(posts, p)
-    }
+	for rows.Next() {
+		var p Post
+		err = rows.Scan(&p.ID, &p.Text, &p.like, &p.dislike)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
 
-    return posts, nil
+	return posts, nil
 }
