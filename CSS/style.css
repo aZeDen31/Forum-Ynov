@@ -63,6 +63,11 @@ body{
     color:ivory;
 }
 
+.posts{
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
 .nom{
     color: bisque;
 }
@@ -204,4 +209,25 @@ form{
 .thread img {
     width: 200px;
     max-height: 150px;
+}
+
+#description{
+    padding-top: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: aliceblue;
+    border-bottom: 2px solid;
+}
+
+#description h1{
+    color:cornflowerblue;
+}
+
+#description img{
+    width: 150px;
+}
+
+#poststhread{
+    padding: 20px;
 }
