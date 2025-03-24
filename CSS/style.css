@@ -17,7 +17,7 @@ header{
     align-items: center;
     color: antiquewhite;
     position: fixed;
-        top: 0; /* vaut mieux fixer les valeurs par défaut pour ne pas avoir de mauvaises surprises */
+        top: 0; 
         left: 0;
         right: 0;
 }
@@ -136,6 +136,8 @@ form{
 }
 
 #infosProfil{
+    
+    padding-top: 120px;
     display: flex;
     justify-content: center;
     margin: 30px;
