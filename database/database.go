@@ -137,6 +137,7 @@ func Insertpost(db *sql.DB, text string) error {
 	_, err := db.Exec(query, text)
 	return err
 }
+// Insertlike insère un nouveau like dans le table "like".
 func Insertlike(db *sql.DB, like int, id int) error {
 	query := "UPDATE posts SET like = like + 1 WHERE id = ?"
 	_, err := db.Exec(query, id)
