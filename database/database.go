@@ -143,6 +143,7 @@ func Insertlike(db *sql.DB, like int, id int) error {
 	_, err := db.Exec(query, id)
 	return err
 }
+// Insertdislike insère un nouveau dislike dans le table "dislike".
 func Insertdislike(db *sql.DB, dislike int, id int) error {
 	query := "UPDATE posts SET dislike = dislike + 1 WHERE id = ?"
 	_, err := db.Exec(query, id)
