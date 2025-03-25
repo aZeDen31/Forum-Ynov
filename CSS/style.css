@@ -248,3 +248,11 @@ form{
 #boutonProfile:active{
     filter: brightness(0.8);
 }
+
+#addButton{
+    margin-left: 30px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: rgb(87, 117, 188);
+    color: white;
+}
