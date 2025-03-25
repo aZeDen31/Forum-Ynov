@@ -22,6 +22,7 @@ type Post struct {
 	Text    string
 	Like    int
 	Dislike int
+	Image   []byte
 }
 
 // InitDB initialise la base de données et crée la table "utilisateurs" si elle n'existe pas.
@@ -54,6 +55,7 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		"text" VARCHAR(256) NOT NULL,
 		like INT NOT NULL,
 		dislike INT NOT NULL,
+		image BLOB,
 		FOREIGN KEY(utilisateur_id) REFERENCES utilisateurs(id)
 	);`
 	_, err = db.Exec(createTablepost)
@@ -158,9 +160,17 @@ func Insertdislike(db *sql.DB, id int) error {
 	return err
 }
 
-// LecturePost récupère et affiche les messages de la table "post" ainsi que les likes et dislikes.
+// InsertPostWithImage insère une image dans la table "post".
+func InsertPostWithImage(db *sql.DB, utilisateurID int, imageData []byte) error {
+	query := "INSERT INTO posts (utilisateur_id, image) VALUES (?, ?, ?)"
+	_, err := db.Exec(query, utilisateurID, imageData)
+	return err
+}
+
+// LecturePost récupère et affiche les messages de la table "post" ainsi que les likes et dislikes et l'image du poste
+//  ( l'image doit etre convertie en base64 pour l'afficher sur le site web).
 func LecturePost(db *sql.DB) ([]Post, error) {
-	rows, err := db.Query("SELECT id, text, like_count, dislike_count FROM posts")
+	rows, err := db.Query("SELECT id, text, like_count, dislike_count, image FROM posts")
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +180,7 @@ func LecturePost(db *sql.DB) ([]Post, error) {
 
 	for rows.Next() {
 		var p Post
-		err = rows.Scan(&p.ID, &p.Text, &p.Like, &p.Dislike)
+		err = rows.Scan(&p.ID, &p.Text, &p.Like, &p.Dislike, &p.Image)
 		if err != nil {
 			return nil, err
 		}
