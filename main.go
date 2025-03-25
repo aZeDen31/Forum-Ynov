@@ -16,12 +16,12 @@ var DB *sql.DB
 var err error
 
 type UserData struct {
-	Username string
-	Error    string
-	ID 		 int
-	Email	string
+	Username    string
+	Error       string
+	ID          int
+	Email       string
 	Description string
-	 //faudra ajouter des trucs c ce que je passe a la template profile
+	//faudra ajouter des trucs c ce que je passe a la template profile
 }
 
 var userdata UserData
@@ -29,7 +29,7 @@ var userdata UserData
 func main() {
 	// Initialisation de la base de données
 	userdata.Username = "Non connecté"
-	userdata.ID = 0 //si ID = 0 user non connécté 
+	userdata.ID = 0 //si ID = 0 user non connécté
 	DB, err = database.InitDB("ma_base.db")
 	if err != nil {
 		log.Fatal("Erreur d'initialisation de la base de données:", err)
@@ -74,7 +74,6 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-
 
 	tmpl := template.Must(template.ParseFiles("HTML/profile.html"))
 
@@ -223,10 +222,9 @@ func Read64(r *http.Request, name string) (string, error) { //lit le cookie en b
 }
 
 func Like(w http.ResponseWriter, r *http.Request, id int) {
-	database.Insertlike(DB, 1, id)
+	database.Insertlike(DB, id)
 }
 
 func Dislike(w http.ResponseWriter, r *http.Request, id int) {
-	database.Insertdislike(DB, 1, id)
+	database.Insertdislike(DB, id)
 }
-
