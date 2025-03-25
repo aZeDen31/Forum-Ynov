@@ -133,6 +133,16 @@ func FindUser(db *sql.DB, email string, mdp string) (Utilisateur, int) { //LOGIN
 
 	return utilisateur, 0
 }
+func FindUserByNom(db *sql.DB, nom string) (Utilisateur, error) {
+	var utilisateur Utilisateur
+
+	row := db.QueryRow("SELECT id, nom, email, mdp, desc FROM utilisateurs WHERE nom = ?", nom)
+
+	err := row.Scan(&utilisateur.ID, &utilisateur.Nom, &utilisateur.Email, &utilisateur.Mdp, &utilisateur.Desc)
+
+	return utilisateur, err
+}
+
 func UpdateDesc(db *sql.DB, userID int, desc string) error {
 	query := "UPDATE utilisateurs SET desc = ? WHERE id = ?"
 	_, err := db.Exec(query, desc, userID)
@@ -168,7 +178,8 @@ func InsertPostWithImage(db *sql.DB, utilisateurID int, imageData []byte) error 
 }
 
 // LecturePost récupère et affiche les messages de la table "post" ainsi que les likes et dislikes et l'image du poste
-//  ( l'image doit etre convertie en base64 pour l'afficher sur le site web).
+//
+//	( l'image doit etre convertie en base64 pour l'afficher sur le site web).
 func LecturePost(db *sql.DB) ([]Post, error) {
 	rows, err := db.Query("SELECT id, text, like_count, dislike_count, image FROM posts")
 	if err != nil {
