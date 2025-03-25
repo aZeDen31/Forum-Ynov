@@ -18,7 +18,10 @@ var err error
 type UserData struct {
 	Username string
 	Error    string
-	ID 		 int //faudra ajouter des trucs c ce que je passe a la template profile
+	ID 		 int
+	Email	string
+	Description string
+	 //faudra ajouter des trucs c ce que je passe a la template profile
 }
 
 var userdata UserData
@@ -72,7 +75,6 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	database.FindUser(DB, userdata.Username, "")
 
 	tmpl := template.Must(template.ParseFiles("HTML/profile.html"))
 
@@ -154,7 +156,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		}
 		setUserCookie(user, w, r)
 		userdata.Error = ""
-
+		userdata.Email = mail
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 		return
 	}
