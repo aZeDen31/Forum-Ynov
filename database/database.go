@@ -137,11 +137,13 @@ func Insertpost(db *sql.DB, text string) error {
 	_, err := db.Exec(query, text)
 	return err
 }
+// Insertlike insère un nouveau like dans le table "like".
 func Insertlike(db *sql.DB, like int, id int) error {
 	query := "UPDATE posts SET like = like + ? WHERE id = ?"
 	_, err := db.Exec(query,like, id)
 	return err
 }
+// Insertdislike insère un nouveau dislike dans le table "dislike".
 func Insertdislike(db *sql.DB, dislike int, id int) error {
 	query := "UPDATE posts SET dislike = dislike + ? WHERE id = ?"
 	_, err := db.Exec(query,dislike, id)
