@@ -76,7 +76,7 @@ body{
     padding-right: 20px;
 }
 
-form{
+#postInscriptionConnexion{
     gap: 20px;
     padding: 50px;
     background-color: lightgray;
@@ -87,7 +87,7 @@ form{
     justify-content:center;
 }
 
-#mdp,#Mail,#mdp2{
+#mdp,#Mail,#mdp2,#username{
     border-radius: 5px;
     padding: 10px;
     width: 200px;
@@ -255,4 +255,51 @@ form{
     border-radius: 5px;
     background-color: rgb(87, 117, 188);
     color: white;
+}
+
+#formPost{
+    margin-top: 150px;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#titleNewPost{
+    width: 250px;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+#contenuPost{
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.conteneur{
+    width: fit-content;
+    align-self: center;
+}
+
+#threadSelect{
+    width: fit-content;
+    padding: 5px;
+    background-color: #333;
+    color: white;
+}
+
+#boutonPost{
+    width: fit-content;
+    padding: 5px;
+    font-size: medium;
+    align-self:flex-end;
+    border-radius: 5px;
+}
+
+#boutonPost:hover{
+    background-color: aliceblue;
+}
+
+#boutonPost:active{
+    opacity: 80%;
 }

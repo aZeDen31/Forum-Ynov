@@ -10,14 +10,14 @@
     <div class="imageform">
         <img src="../img/2chad-removebg.png" alt="logo" class="logo" id="logoCo">
         <div class="formulaire1">
-            <form method="post" action="/login">
+            <form method="post" action="/login" id="postInscriptionConnexion">
                 <div class="formulaire">
                     <input type="email" id="Mail" name="mail" placeholder="Entrez votre E-mail" required>
                     <input type="password" id="mdp" name="mdp" placeholder="Entrez votre mot de passe" required>
                 </div>
                 <div class="buttonlink">
                     <button type="submit" id="bouton">Connexion</button>
-                    <a href="/register">Pas encore de compte ? Inscrivez vous</a>
+                    <a href="inscription.html">Pas encore de compte ? Inscrivez vous</a>
                     {{if .Error}}
                         <p>{{.Error}}</p>
                     {{end}}
