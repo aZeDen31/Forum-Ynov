@@ -200,3 +200,12 @@ func LecturePost(db *sql.DB) ([]Post, error) {
 
 	return posts, nil
 }
+
+func GetId(db *sql.DB, name string) int{
+
+	query := "SELECT id FROM utilisateurs WHERE nom = ?"
+	row := db.QueryRow(query, name)
+	var id int
+	row.Scan(&id)
+	return id
+}

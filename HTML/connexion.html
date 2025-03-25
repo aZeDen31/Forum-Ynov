@@ -1,25 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../CSS/style.css">
-    <title>Connexion</title>
+    <title>Forum - Connexion</title>
 </head>
-
-
 <body>
     <div class="imageform">
         <img src="../img/2chad-removebg.png" alt="logo" class="logo" id="logoCo">
         <div class="formulaire1">
-            <form action="post">
+            <form method="post" action="/login">
                 <div class="formulaire">
-                    <input type="text" id="Mail" name="E-mail"  placeholder="Entrez votre E-mail">
-                    <input type="text" id="mdp" name="Mot de passe" placeholder="Entrez votre mot de passe">
+                    <input type="email" id="Mail" name="mail" placeholder="Entrez votre E-mail" required>
+                    <input type="password" id="mdp" name="mdp" placeholder="Entrez votre mot de passe" required>
                 </div>
                 <div class="buttonlink">
-                    <input type="button" value="Connexion" id="bouton">
-                    <a href="inscription.html">Pas encore de compte ? Inscrivez vous</a>
+                    <button type="submit" id="bouton">Connexion</button>
+                    <a href="/register">Pas encore de compte ? Inscrivez vous</a>
+                    {{if .Error}}
+                        <p>{{.Error}}</p>
+                    {{end}}
                 </div>
             </form>
         </div>
