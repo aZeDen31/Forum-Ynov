@@ -141,8 +141,6 @@ form{
 }
 
 #infosProfil{
-    
-    padding-top: 120px;
     display: flex;
     justify-content: center;
     margin: 30px;
@@ -230,4 +228,23 @@ form{
 
 #poststhread{
     padding: 20px;
+}
+
+#bodyProfile{
+    padding-top: 120px;
+}
+
+#boutonProfile{
+    padding: 10px;
+    margin-left: 5%;
+    border-radius: 5px;
+    background-color:antiquewhite;
+}
+
+#boutonProfile:hover{
+    background-color:beige;
+}
+
+#boutonProfile:active{
+    filter: brightness(0.8);
 }
