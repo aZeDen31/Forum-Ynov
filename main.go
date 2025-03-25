@@ -17,7 +17,8 @@ var err error
 
 type UserData struct {
 	Username string
-	Error    string //faudra ajouter des trucs c ce que je passe a la template profile
+	Error    string
+	ID 		 int //faudra ajouter des trucs c ce que je passe a la template profile
 }
 
 var userdata UserData
@@ -25,6 +26,7 @@ var userdata UserData
 func main() {
 	// Initialisation de la base de données
 	userdata.Username = "Non connecté"
+	userdata.ID = 0 //si ID = 0 user non connécté 
 	DB, err = database.InitDB("ma_base.db")
 	if err != nil {
 		log.Fatal("Erreur d'initialisation de la base de données:", err)
@@ -56,6 +58,7 @@ func server() {
 	http.HandleFunc("/login", LoginPage)
 	http.HandleFunc("/register", Signup)
 	http.HandleFunc("/profile", profileHandler)
+	http.HandleFunc("/threads", threadsHandler)
 
 	fmt.Println("clique sur le lien http://localhost:5500/")
 	if err := http.ListenAndServe(":5500", nil); err != nil {
@@ -69,13 +72,22 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	database.FindUser(DB, userdata.Username, "")
+
 	tmpl := template.Must(template.ParseFiles("HTML/profile.html"))
+
 	tmpl.Execute(w, userdata)
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	checkCookie(w, r)
 	tmpl := template.Must(template.ParseFiles("HTML/index.html"))
+	tmpl.Execute(w, userdata)
+}
+
+func threadsHandler(w http.ResponseWriter, r *http.Request) {
+	checkCookie(w, r)
+	tmpl := template.Must(template.ParseFiles("HTML/thread.html"))
 	tmpl.Execute(w, userdata)
 }
 
@@ -142,6 +154,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 		}
 		setUserCookie(user, w, r)
 		userdata.Error = ""
+
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 		return
 	}
@@ -183,6 +196,7 @@ func checkCookie(w http.ResponseWriter, r *http.Request) int {
 	username, _ := Read64(r, "user")
 
 	userdata.Username = username
+	userdata.ID = database.GetId(DB, userdata.Username)
 	return 0
 }
 
@@ -213,3 +227,4 @@ func Like(w http.ResponseWriter, r *http.Request, id int) {
 func Dislike(w http.ResponseWriter, r *http.Request, id int) {
 	database.Insertdislike(DB, 1, id)
 }
+
