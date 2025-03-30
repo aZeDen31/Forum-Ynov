@@ -9,20 +9,26 @@
 </head>
 
 <header>
-    <a href="index.html" class="lien-logo">
+    <a href="/" class="lien-logo">
         <img src="../img/2chad-removebg.png" alt="logo" class="logo">
     </a>
     <p>Récent</p>
     <p>Contact</p>
     <p>{{.Username}}</p>
-    <a href="profile.html" class="lien-profile">
+    <a href="/profile" class="lien-profile">
         <img src="../img/placeholder-profile.png" alt="profile-pic" class="profile-pic">
     </a>
 </header>
 <body>
     <div id="bodyProfile">
-        <button id="boutonProfile"><i class="fa-solid fa-right-to-bracket"></i> Déconnexion</button>
-        
+        <form action="/profile" method="POST">
+            <input type="hidden" name="action" value="Deconnexion">
+            <button id="boutonProfile" type="submit">
+                <i class="fa-solid fa-right-to-bracket"></i> Déconnexion
+            </button>
+        </form>
+    </div>
+
         <div id="infosProfil">
             <div id="infosProfil2">
                 <img src="../img/placeholder-profile.png" alt="plhPP">
@@ -37,3 +43,7 @@
     </div>
 </body>
 </html>
+<script>
+
+
+</script>
