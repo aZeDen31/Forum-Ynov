@@ -237,11 +237,13 @@ body{
 
 #bodyProfile{
     padding-top: 120px;
+    display: flex;
+    justify-content: space-between;
 }
 
 #boutonProfile{
     padding: 10px;
-    margin-left: 5%;
+    margin-left: 100px;
     border-radius: 5px;
     background-color:antiquewhite;
 }
@@ -324,4 +326,19 @@ body{
     color: black;
     margin-top: 0;
     margin-bottom: 1px;
+}
+
+#boutonModif{
+    padding: 10px;
+    margin-right: 100px;
+    border-radius: 5px;
+    background-color:antiquewhite;
+}
+
+#boutonModif:hover{
+    background-color:beige;
+}
+
+#boutonModif:active{
+    filter: brightness(0.8);
 }
