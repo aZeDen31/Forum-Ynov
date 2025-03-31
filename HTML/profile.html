@@ -4,24 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../CSS/style.css">
-    <title>Forum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Profile</title>
 </head>
 
 <header>
-    <a href="index.html" class="lien-logo">
+    <a href="/" class="lien-logo">
         <img src="../img/2chad-removebg.png" alt="logo" class="logo">
     </a>
     <p>Récent</p>
     <p>Contact</p>
     <p>{{.Username}}</p>
-    <a href="http://127.0.0.1:5500/profile" class="lien-profile">
+    <a href="/profile" class="lien-profile">
         <img src="../img/placeholder-profile.png" alt="profile-pic" class="profile-pic">
     </a>
 </header>
 <body>
     <div id="bodyProfile">
-        <button id="boutonProfile">Déconnexion</button>
-        
+        <form action="/profile" method="POST">
+            <input type="hidden" name="action" value="Deconnexion">
+            <button id="boutonProfile" type="submit">
+                <i class="fa-solid fa-right-to-bracket"></i> Déconnexion
+            </button>
+        </form>
+    </div>
+
         <div id="infosProfil">
             <div id="infosProfil2">
                 <img src="../img/placeholder-profile.png" alt="plhPP">
@@ -36,3 +43,7 @@
     </div>
 </body>
 </html>
+<script>
+
+
+</script>

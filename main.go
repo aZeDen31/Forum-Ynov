@@ -9,6 +9,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 // variable global sinon c chiant
@@ -37,7 +39,7 @@ func main() {
 	defer DB.Close()
 
 	// Lecture des utilisateurs
-	utilisateurs, err := database.LectureUtilisateurs(DB)
+	/*utilisateurs, err := database.LectureUtilisateurs(DB)
 	if err != nil {
 		log.Fatal("Erreur lors de la récupération des utilisateurs:", err)
 	}
@@ -45,7 +47,7 @@ func main() {
 	for _, u := range utilisateurs {
 		fmt.Printf("ID: %d | Nom: %s | Email: %s | MDP: %s\n", u.ID, u.Nom, u.Email, u.Mdp)
 	}
-
+	*/
 	server()
 }
 
@@ -62,6 +64,9 @@ func server() {
 	http.HandleFunc("/register", Signup)
 	http.HandleFunc("/profile", profileHandler)
 	http.HandleFunc("/threads", threadsHandler)
+	http.HandleFunc("/createpost", createpostHandler)
+	http.HandleFunc("/like/", LikeHandler)
+	http.HandleFunc("/dislike/", DislikeHandler)
 
 	fmt.Println("clique sur le lien http://localhost:5500/")
 	if err := http.ListenAndServe(":5500", nil); err != nil {
@@ -70,9 +75,17 @@ func server() {
 }
 
 func profileHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("test2")
 	if checkCookie(w, r) != 0 {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
+	}
+	if r.Method == "POST" {
+		if r.FormValue("action") == "Deconnexion" {
+			fmt.Printf("test")
+			deleteCookie(w, r)
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+		}
 	}
 
 	tmpl := template.Must(template.ParseFiles("HTML/profile.html"))
@@ -82,14 +95,69 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	checkCookie(w, r)
+
+	posts, err := database.LecturePost(DB)
+	if err != nil {
+		log.Println("Erreur lors de la récupération des posts:", err)
+	}
+
+	// j'envoi ça dans index
+	data := struct {
+		Username string
+		Posts    []database.Post
+	}{
+		Username: userdata.Username,
+		Posts:    posts,
+	}
+
 	tmpl := template.Must(template.ParseFiles("HTML/index.html"))
-	tmpl.Execute(w, userdata)
+	tmpl.Execute(w, data)
 }
 
 func threadsHandler(w http.ResponseWriter, r *http.Request) {
 	checkCookie(w, r)
 	tmpl := template.Must(template.ParseFiles("HTML/thread.html"))
 	tmpl.Execute(w, userdata)
+}
+
+func createpostHandler(w http.ResponseWriter, r *http.Request) {
+	if checkCookie(w, r) != 0 {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	if r.Method == "POST" {
+		titre := r.FormValue("Titre")
+		contenu := r.FormValue("Contenu")
+		thread := r.FormValue("pets") // Le nom du champ select est "pets" dans ton HTML
+
+		// Vérifier que les champs requis sont remplis
+		if titre == "" || contenu == "" || thread == "" {
+			// Rediriger avec un message d'erreur
+			http.Redirect(w, r, "/createpost?error=Tous les champs sont obligatoires", http.StatusSeeOther)
+			return
+		}
+
+		err := database.InsertPost(DB, userdata.ID, titre, contenu, thread)
+		if err != nil {
+			log.Println("Erreur lors de l'insertion du post:", err)
+			http.Redirect(w, r, "/createpost?error=Erreur lors de la création du post", http.StatusSeeOther)
+			return
+		}
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	tmpl := template.Must(template.ParseFiles("HTML/createpost.html"))
+	data := struct {
+		Username string
+		Error    string
+	}{
+		Username: userdata.Username,
+		Error:    r.URL.Query().Get("error"),
+	}
+	tmpl.Execute(w, data)
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
@@ -179,6 +247,15 @@ func setUserCookie(user database.Utilisateur, w http.ResponseWriter, r *http.Req
 	Write64(w, cookie) //donne le cookie qu'on vient de faire au client
 }
 
+func deleteCookie(w http.ResponseWriter, r *http.Request) {
+	c := &http.Cookie{
+		Name:    "user",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Unix(0, 0),
+	}
+	http.SetCookie(w, c)
+}
 func checkCookie(w http.ResponseWriter, r *http.Request) int {
 
 	_, err := r.Cookie("user")
@@ -221,10 +298,49 @@ func Read64(r *http.Request, name string) (string, error) { //lit le cookie en b
 
 }
 
-func Like(w http.ResponseWriter, r *http.Request, id int) {
-	database.Insertlike(DB, id)
+func LikeHandler(w http.ResponseWriter, r *http.Request) {
+	if checkCookie(w, r) != 0 {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	idStr := r.URL.Path[len("/like/"):]
+	postID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "ID invalide", http.StatusBadRequest)
+		return
+	}
+
+	username, err := Read64(r, "user")
+
+	if err := database.Insertlike(DB, postID, username); err != nil {
+		http.Error(w, "Erreur lors de l'ajout du like", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func Dislike(w http.ResponseWriter, r *http.Request, id int) {
-	database.Insertdislike(DB, id)
+func DislikeHandler(w http.ResponseWriter, r *http.Request) {
+	if checkCookie(w, r) != 0 {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	idStr := r.URL.Path[len("/dislike/"):]
+	postID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "ID invalide", http.StatusBadRequest)
+		return
+	}
+	username, err := Read64(r, "user")
+	if err != nil {
+		http.Error(w, "Utilisateur non authentifié", http.StatusUnauthorized)
+		return
+	}
+	if err := database.Insertdislike(DB, postID, username); err != nil {
+		http.Error(w, "Erreur lors de l'ajout du dislike", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

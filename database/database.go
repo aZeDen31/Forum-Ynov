@@ -2,7 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"fmt"
+
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
@@ -15,14 +18,18 @@ type Utilisateur struct {
 	Email string
 	Mdp   string
 	Desc  string
+	Posts []Post
 }
 
 type Post struct {
-	ID      int
-	Text    string
-	Like    int
-	Dislike int
-	Image   []byte
+	ID         int
+	Titre      string
+	Text       string
+	Thread     string
+	Like       int
+	Dislike    int
+	Image      []byte
+	AuthorName string //j'ai ajouter des champs chef il en manquait
 }
 
 // InitDB initialise la base de données et crée la table "utilisateurs" si elle n'existe pas.
@@ -62,6 +69,19 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	//je vérifie la si les tables que j'ai ajouter elles existent sinon je  les adds
+	_, err = db.Exec("PRAGMA table_info(posts)")
+	if err != nil {
+		return nil, err
+	}
+
+	db.Exec("ALTER TABLE posts ADD COLUMN titre VARCHAR(256)")
+
+	db.Exec("ALTER TABLE posts ADD COLUMN thread VARCHAR(50)")
+
+	db.Exec("ALTER TABLE posts ADD COLUMN liked_by TEXT DEFAULT ''")
+
+	db.Exec("ALTER TABLE posts ADD COLUMN disliked_by TEXT DEFAULT ''")
 
 	// Vérifier la connexion
 	err = db.Ping()
@@ -88,7 +108,7 @@ func InsertUser(db *sql.DB, nom, email, mdp string) error {
 }
 
 // LectureUtilisateurs récupère et affiche les utilisateurs de la table "utilisateurs".
-func LectureUtilisateurs(db *sql.DB) ([]Utilisateur, error) {
+/*func LectureUtilisateurs(db *sql.DB) ([]Utilisateur, error) {
 	rows, err := db.Query("SELECT id, nom, email, mdp, desc FROM utilisateurs")
 	if err != nil {
 		return nil, err
@@ -107,7 +127,7 @@ func LectureUtilisateurs(db *sql.DB) ([]Utilisateur, error) {
 	}
 
 	return utilisateurs, nil
-}
+}*/
 
 func FindUser(db *sql.DB, email string, mdp string) (Utilisateur, int) { //LOGIN
 
@@ -150,23 +170,55 @@ func UpdateDesc(db *sql.DB, userID int, desc string) error {
 }
 
 // Insertpost insère un nouvel message dans la table "post".
-func InsertPost(db *sql.DB, utilisateurID int, text string) error {
-	query := "INSERT INTO posts (utilisateur_id, text) VALUES (?, ?)"
-	_, err := db.Exec(query, utilisateurID, text)
+func InsertPost(db *sql.DB, utilisateurID int, titre string, text string, thread string) error {
+	query := "INSERT INTO posts (utilisateur_id, titre, text, thread, like, dislike) VALUES (?, ?, ?, ?, 0, 0)"
+	_, err := db.Exec(query, utilisateurID, titre, text, thread)
 	return err
 }
 
-// Insertlike insère un nouveau like dans le table "like".
-func Insertlike(db *sql.DB, id int) error {
-	query := "UPDATE posts SET like = like + 1 WHERE id = ?"
-	_, err := db.Exec(query, id)
+// Insertlike inserts a like for the given post from the given user.
+// If the user has already liked the post, remove the like.
+func Insertlike(db *sql.DB, postID int, username string) error {
+	var likedBy string
+	if err := db.QueryRow("SELECT liked_by FROM posts WHERE id = ?", postID).Scan(&likedBy); err != nil {
+		return err
+	}
+	if strings.Contains(likedBy, username) {
+		updated := strings.Trim(strings.ReplaceAll(","+likedBy+",", ","+username+",", ","), ",")
+		_, err := db.Exec("UPDATE posts SET like = like - 1, liked_by = ? WHERE id = ?", updated, postID)
+		return err
+	}
+	_, err := db.Exec(`
+		UPDATE posts 
+		SET like = like + 1,
+			liked_by = CASE 
+				WHEN liked_by = '' THEN ? 
+				ELSE liked_by || ',' || ? 
+			END 
+		WHERE id = ?`, username, username, postID)
 	return err
 }
 
-// Insertdislike insère un nouveau dislike dans le table "dislike".
-func Insertdislike(db *sql.DB, id int) error {
-	query := "UPDATE posts SET dislike = dislike + 1 WHERE id = ?"
-	_, err := db.Exec(query, id)
+// Insertdislike inserts a dislike for the given post from the given user.
+// If the user has already disliked the post, remove the dislike.
+func Insertdislike(db *sql.DB, postID int, username string) error {
+	var dislikedBy string
+	if err := db.QueryRow("SELECT disliked_by FROM posts WHERE id = ?", postID).Scan(&dislikedBy); err != nil {
+		return err
+	}
+	if strings.Contains(dislikedBy, username) {
+		updated := strings.Trim(strings.ReplaceAll(","+dislikedBy+",", ","+username+",", ","), ",")
+		_, err := db.Exec("UPDATE posts SET dislike = dislike - 1, disliked_by = ? WHERE id = ?", updated, postID)
+		return err
+	}
+	_, err := db.Exec(`
+		UPDATE posts 
+		SET dislike = dislike + 1,
+			disliked_by = CASE 
+				WHEN disliked_by = '' THEN ? 
+				ELSE disliked_by || ',' || ? 
+			END 
+		WHERE id = ?`, username, username, postID)
 	return err
 }
 
@@ -177,11 +229,15 @@ func InsertPostWithImage(db *sql.DB, utilisateurID int, imageData []byte) error 
 	return err
 }
 
-// LecturePost récupère et affiche les messages de la table "post" ainsi que les likes et dislikes et l'image du poste
-//
-//	( l'image doit etre convertie en base64 pour l'afficher sur le site web).
 func LecturePost(db *sql.DB) ([]Post, error) {
-	rows, err := db.Query("SELECT id, text, like_count, dislike_count, image FROM posts")
+	query := `
+    SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom 
+    FROM posts p
+    JOIN utilisateurs u ON p.utilisateur_id = u.id
+    ORDER BY p.id DESC
+    `
+
+	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +247,7 @@ func LecturePost(db *sql.DB) ([]Post, error) {
 
 	for rows.Next() {
 		var p Post
-		err = rows.Scan(&p.ID, &p.Text, &p.Like, &p.Dislike, &p.Image)
+		err = rows.Scan(&p.ID, &p.Titre, &p.Text, &p.Thread, &p.Like, &p.Dislike, &p.Image, &p.AuthorName)
 		if err != nil {
 			return nil, err
 		}
@@ -200,12 +256,16 @@ func LecturePost(db *sql.DB) ([]Post, error) {
 
 	return posts, nil
 }
-
-func GetId(db *sql.DB, name string) int{
+func GetId(db *sql.DB, name string) int {
 
 	query := "SELECT id FROM utilisateurs WHERE nom = ?"
 	row := db.QueryRow(query, name)
 	var id int
 	row.Scan(&id)
 	return id
+}
+
+// la fonction c pour tes images de con en b64
+func ImageToBase64(imageData []byte) string {
+	return base64.StdEncoding.EncodeToString(imageData)
 }

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Création post</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+</head>
+
+<header> 
+    <a href="/" class="lien-logo">
+        <img src="../img/2chad-removebg.png" alt="logo" class="logo">
+    </a>
+    <p>Récent</p>
+    <p>Contact</p> 
+    <a href="/profile" class="lien-profile">
+        <img src="../img/placeholder-profile.png" alt="profile-pic" class="profile-pic">
+    </a>
+</header>
+
+<body>
+    <div class = "formulaire">
+        <div class="conteneur">
+            <form method="POST" id="formPost">
+                <input type="text" name="Titre" id="titleNewPost" placeholder="Entrez le titre de votre post">
+                <textarea name="Contenu" id="contenuPost" placeholder="Rédigez le contenu de votre post" rows="10" cols="70"></textarea>
+                <select name="pets" id="threadSelect">
+                    <option value="">Veuillez choisir le thread</option>
+                    <option value="manga">Manga</option>
+                    <option value="JV">Jeux vidéos</option>
+                    <option value="sport">Sport</option>
+                </select>
+                <button id="boutonPost">Poster</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
