@@ -178,17 +178,25 @@ func InsertPost(db *sql.DB, utilisateurID int, titre string, text string, thread
 
 // Insertlike inserts a like for the given post from the given user.
 // If the user has already liked the post, remove the like.
-func Insertlike(db *sql.DB, postID int, username string) error {
+func Insertlike(db *sql.DB, postID int, username string) int {
 	var likedBy string
+	var dislikedBy string
+	if err := db.QueryRow("SELECT disliked_by FROM posts WHERE id = ?", postID).Scan(&dislikedBy); err != nil {
+		return 3
+	}
+	if strings.Contains(dislikedBy, username) {
+		return 1
+	}
+
 	if err := db.QueryRow("SELECT liked_by FROM posts WHERE id = ?", postID).Scan(&likedBy); err != nil {
-		return err
+		return 3
 	}
 	if strings.Contains(likedBy, username) {
 		updated := strings.Trim(strings.ReplaceAll(","+likedBy+",", ","+username+",", ","), ",")
-		_, err := db.Exec("UPDATE posts SET like = like - 1, liked_by = ? WHERE id = ?", updated, postID)
-		return err
+		db.Exec("UPDATE posts SET like = like - 1, liked_by = ? WHERE id = ?", updated, postID)
+		return 2
 	}
-	_, err := db.Exec(`
+	db.Exec(`
 		UPDATE posts 
 		SET like = like + 1,
 			liked_by = CASE 
@@ -196,22 +204,31 @@ func Insertlike(db *sql.DB, postID int, username string) error {
 				ELSE liked_by || ',' || ? 
 			END 
 		WHERE id = ?`, username, username, postID)
-	return err
+	return 0
 }
 
 // Insertdislike inserts a dislike for the given post from the given user.
 // If the user has already disliked the post, remove the dislike.
-func Insertdislike(db *sql.DB, postID int, username string) error {
+func Insertdislike(db *sql.DB, postID int, username string) int {
 	var dislikedBy string
+	var likedBy string
+
+	if err := db.QueryRow("SELECT liked_by FROM posts WHERE id = ?", postID).Scan(&likedBy); err != nil {
+		return 3
+	}
+	if strings.Contains(likedBy, username) {
+		return 1
+	}
+
 	if err := db.QueryRow("SELECT disliked_by FROM posts WHERE id = ?", postID).Scan(&dislikedBy); err != nil {
-		return err
+		return 3
 	}
 	if strings.Contains(dislikedBy, username) {
 		updated := strings.Trim(strings.ReplaceAll(","+dislikedBy+",", ","+username+",", ","), ",")
-		_, err := db.Exec("UPDATE posts SET dislike = dislike - 1, disliked_by = ? WHERE id = ?", updated, postID)
-		return err
+		db.Exec("UPDATE posts SET dislike = dislike - 1, disliked_by = ? WHERE id = ?", updated, postID)
+		return 2
 	}
-	_, err := db.Exec(`
+	db.Exec(`
 		UPDATE posts 
 		SET dislike = dislike + 1,
 			disliked_by = CASE 
@@ -219,7 +236,7 @@ func Insertdislike(db *sql.DB, postID int, username string) error {
 				ELSE disliked_by || ',' || ? 
 			END 
 		WHERE id = ?`, username, username, postID)
-	return err
+	return 0
 }
 
 // InsertPostWithImage insère une image dans la table "post".

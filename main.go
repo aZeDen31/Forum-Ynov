@@ -313,10 +313,7 @@ func LikeHandler(w http.ResponseWriter, r *http.Request) {
 
 	username, err := Read64(r, "user")
 
-	if err := database.Insertlike(DB, postID, username); err != nil {
-		http.Error(w, "Erreur lors de l'ajout du like", http.StatusInternalServerError)
-		return
-	}
+	database.Insertlike(DB, postID, username)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -338,9 +335,7 @@ func DislikeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Utilisateur non authentifié", http.StatusUnauthorized)
 		return
 	}
-	if err := database.Insertdislike(DB, postID, username); err != nil {
-		http.Error(w, "Erreur lors de l'ajout du dislike", http.StatusInternalServerError)
-		return
-	}
+	database.Insertdislike(DB, postID, username)
+
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
