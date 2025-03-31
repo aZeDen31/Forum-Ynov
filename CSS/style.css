@@ -319,3 +319,9 @@ body{
 .post-actions i{
     color: black;
 }
+
+.post-actions p{
+    color: black;
+    margin-top: 0;
+    margin-bottom: 1px;
+}
