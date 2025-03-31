@@ -45,11 +45,11 @@
             </div>
         </div>
     </div>
-    <a href="createpost.html">
+    <form action="/createpost" method="POST">
         <button id="addButton" type="submit">
             <i class="fa-solid fa-plus"></i> Ajouter un post
         </button>
-    </a>
+    </form>
     <div class="posts">
         {{range .Posts}}
         <div class="post1">
