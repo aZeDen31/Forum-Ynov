@@ -273,7 +273,7 @@ body{
     filter: brightness(0.8);
 }
 
-#formPost{
+#formPost, #formThread, #formProfil{
     margin-top: 150px;
     align-self: center;
     display: flex;
