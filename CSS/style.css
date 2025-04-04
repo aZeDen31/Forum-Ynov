@@ -20,9 +20,12 @@ header{
         top: 0; 
         left: 0;
         right: 0;
+    size: 25px;
 }
 
-
+.username{
+    font-size: 25px;
+}
 
 body{
     padding: 0;
