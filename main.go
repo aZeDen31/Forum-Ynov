@@ -30,6 +30,7 @@ var userdata UserData
 
 func main() {
 	// Initialisation de la base de données
+
 	userdata.Username = "Non connecté"
 	userdata.ID = 0 //si ID = 0 user non connécté
 	DB, err = database.InitDB("ma_base.db")
@@ -110,7 +111,25 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		Posts:    posts,
 	}
 
-	tmpl := template.Must(template.ParseFiles("HTML/index.html"))
+	// Créer un FuncMap avec la fonction subtract
+	funcMap := template.FuncMap{
+		"subtract": func(a, b int) int {
+			return a - b
+		},
+	}
+
+	// Créer le template avec les fonctions personnalisées
+	tmpl := template.New("index.html").Funcs(funcMap)
+
+	// Analyser le fichier de template
+	tmpl, err = tmpl.ParseFiles("HTML/index.html")
+	if err != nil {
+		log.Println("Erreur lors de l'analyse du template:", err)
+		http.Error(w, "Erreur serveur", http.StatusInternalServerError)
+		return
+	}
+
+	// Exécuter le template
 	tmpl.Execute(w, data)
 }
 
@@ -129,7 +148,7 @@ func createpostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		titre := r.FormValue("Titre")
 		contenu := r.FormValue("Contenu")
-		thread := r.FormValue("pets") // Le nom du champ select est "pets" dans ton HTML
+		thread := r.FormValue("pets")
 
 		// Vérifier que les champs requis sont remplis
 		if titre == "" || contenu == "" || thread == "" {

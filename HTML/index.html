@@ -64,7 +64,7 @@
                     <p>{{.Text}}</p>
                     <div class="post-actions">
                         <a href="/like/{{.ID}}"><i class="fa-solid fa-caret-up"></i></a>
-                        <p>20</p>
+                        <p>{{subtract .Like .Dislike}}</p>
                         <a href="/dislike/{{.ID}}"><i class="fa-solid fa-caret-down"></i></a>
                     </div>
                     <h4 class="nom">Posted by: {{.AuthorName}}</h4>
