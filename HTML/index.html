@@ -45,7 +45,6 @@
             </div>
         </div>
     </div>
-
     <form action="/createpost" method="POST">
         <button id="addButton" type="submit">
             <i class="fa-solid fa-plus"></i> Ajouter un post
@@ -64,8 +63,9 @@
                 <div class="post-texte">
                     <p>{{.Text}}</p>
                     <div class="post-actions">
-                        <a href="/like/{{.ID}}"><i class="fa-solid fa-thumbs-up"></i> {{.Like}}</a>
-                        <a href="/dislike/{{.ID}}"><i class="fa-solid fa-thumbs-down"></i> {{.Dislike}}</a>
+                        <a href="/like/{{.ID}}"><i class="fa-solid fa-caret-up"></i></a>
+                        <p>20</p>
+                        <a href="/dislike/{{.ID}}"><i class="fa-solid fa-caret-down"></i></a>
                     </div>
                     <h4 class="nom">Posted by: {{.AuthorName}}</h4>
                 </div>
