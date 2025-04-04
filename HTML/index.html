@@ -45,11 +45,19 @@
             </div>
         </div>
     </div>
-    <form action="/createpost" method="POST">
-        <button id="addButton" type="submit">
-            <i class="fa-solid fa-plus"></i> Ajouter un post
-        </button>
-    </form>
+    <div class="indexButtons">
+        <form action="/createpost" method="POST">
+            <button id="addButton" type="submit">
+                <i class="fa-solid fa-plus"></i> Ajouter un post
+            </button>
+        </form>
+
+        <form action="/createpost" method="POST">
+            <button id="addButton" type="submit">
+                <i class="fa-solid fa-plus"></i> Créer un thread
+            </button>
+        </form>
+    </div>
     <div class="posts">
         {{range .Posts}}
         <div class="post1">
