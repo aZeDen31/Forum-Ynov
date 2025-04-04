@@ -60,6 +60,7 @@ func server() {
 	http.Handle("/img/", http.StripPrefix("/img/", fd))
 
 	http.HandleFunc("/", IndexHandler)
+	http.HandleFunc("/profileModif", modifProfileHandler)
 	http.HandleFunc("/login", LoginPage)
 	http.HandleFunc("/register", Signup)
 	http.HandleFunc("/profile", profileHandler)
@@ -72,6 +73,17 @@ func server() {
 	if err := http.ListenAndServe(":5500", nil); err != nil {
 		panic(err)
 	}
+}
+
+func modifProfileHandler(w http.ResponseWriter, r *http.Request) {
+	if checkCookie(w, r) != 0 {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	tmpl := template.Must(template.ParseFiles("HTML/profilModif.html"))
+
+	tmpl.Execute(w, userdata)
 }
 
 func profileHandler(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +122,25 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		Posts:    posts,
 	}
 
-	tmpl := template.Must(template.ParseFiles("HTML/index.html"))
+	// Créer un FuncMap avec la fonction subtract
+	funcMap := template.FuncMap{
+		"subtract": func(a, b int) int {
+			return a - b
+		},
+	}
+
+	// Créer le template avec les fonctions personnalisées
+	tmpl := template.New("index.html").Funcs(funcMap)
+
+	// Analyser le fichier de template
+	tmpl, err = tmpl.ParseFiles("HTML/index.html")
+	if err != nil {
+		log.Println("Erreur lors de l'analyse du template:", err)
+		http.Error(w, "Erreur serveur", http.StatusInternalServerError)
+		return
+	}
+
+	// Exécuter le template
 	tmpl.Execute(w, data)
 }
 
