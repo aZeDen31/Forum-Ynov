@@ -146,8 +146,44 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 func threadsHandler(w http.ResponseWriter, r *http.Request) {
 	checkCookie(w, r)
-	tmpl := template.Must(template.ParseFiles("HTML/thread.html"))
-	tmpl.Execute(w, userdata)
+	threadName := r.URL.Query().Get("name")
+
+	posts, err := database.LecturePostThread(threadName, DB)
+	if err != nil {
+		log.Println("Erreur lors de la récupération des posts:", err)
+	}
+
+	// j'envoi ça dans index
+	data := struct {
+		Username string
+		Thread   string
+		Posts    []database.Post
+	}{
+		Username: userdata.Username,
+		Thread:   posts[0].Thread,
+		Posts:    posts,
+	}
+
+	// Créer un FuncMap avec la fonction subtract
+	funcMap := template.FuncMap{
+		"subtract": func(a, b int) int {
+			return a - b
+		},
+	}
+
+	// Créer le template avec les fonctions personnalisées
+	tmpl := template.New("thread.html").Funcs(funcMap)
+
+	// Analyser le fichier de template
+	tmpl, err = tmpl.ParseFiles("HTML/thread.html")
+	if err != nil {
+		log.Println("Erreur lors de l'analyse du template:", err)
+		http.Error(w, "Erreur serveur", http.StatusInternalServerError)
+		return
+	}
+
+	// Exécuter le template
+	tmpl.Execute(w, data)
 }
 
 func createpostHandler(w http.ResponseWriter, r *http.Request) {

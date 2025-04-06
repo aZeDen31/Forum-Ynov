@@ -23,21 +23,21 @@
         <div class="threads">
             <div class="thread">
                 <h4>Jeux Videos</h4>
-                <a href="/threads">
+                <a href="/threads?name=JV">
                 <img src="../img/imgJV.jpg" alt="imgJV"></a>
                 <p>Un thread dédié aux jeux de Chad</p>
             </div>
 
             <div class="thread">
                 <h4>Sport</h4>
-                <a href="/threads">
+                <a href="/threads?name=sport">
                 <img src="../img/imgSport.png" alt="imgSport"></a>
                 <p>Un thread dédié aux sports de Chad</p>
             </div>
 
             <div class="thread">
                 <h4>Mangas</h4>
-                <a href="/threads">
+                <a href="/threads?name=manga">
                 <img src="../img/imgManga.jpg" alt="imgManga"></a>
                 <p>Un thread dédié aux mangas de Chad</p>
             </div>
@@ -48,13 +48,7 @@
             <button id="addButton" type="submit">
                 <i class="fa-solid fa-plus"></i> Ajouter un post
             </button>
-        </form>
-
-        <form action="/createpost" method="POST">
-            <button id="addButton" type="submit">
-                <i class="fa-solid fa-plus"></i> Créer un thread
-            </button>
-        </form>
+            </form>
     </div>
     <div class="posts">
         {{range .Posts}}

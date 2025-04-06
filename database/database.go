@@ -269,3 +269,32 @@ func GetId(db *sql.DB, name string) int {
 func ImageToBase64(imageData []byte) string {
 	return base64.StdEncoding.EncodeToString(imageData)
 }
+
+func LecturePostThread(thread string, db *sql.DB) ([]Post, error) {
+	query := `
+        SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom 
+        FROM posts p
+        JOIN utilisateurs u ON p.utilisateur_id = u.id
+        WHERE p.thread = ?
+        ORDER BY p.id DESC
+    `
+
+	rows, err := db.Query(query, thread)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+
+	for rows.Next() {
+		var p Post
+		err = rows.Scan(&p.ID, &p.Titre, &p.Text, &p.Thread, &p.Like, &p.Dislike, &p.Image, &p.AuthorName)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+
+	return posts, nil
+}
