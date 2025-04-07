@@ -69,7 +69,7 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	//je vérifie la si les tables que j'ai ajouter elles existent sinon je  les adds
 	_, err = db.Exec("PRAGMA table_info(posts)")
 	if err != nil {
@@ -164,6 +164,7 @@ func FindUserByNom(db *sql.DB, nom string) (Utilisateur, error) {
 	return utilisateur, err
 }
 
+// permet de modifier la description de l'utilisateur
 func UpdateDesc(db *sql.DB, userID int, desc string) error {
 	query := "UPDATE utilisateurs SET desc = ? WHERE id = ?"
 	_, err := db.Exec(query, desc, userID)
