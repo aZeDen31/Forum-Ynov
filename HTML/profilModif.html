@@ -20,11 +20,14 @@
 <body>
     <div class = "formulaire">
         <div class="conteneur">
-            <form method="POST" id="formProfil">
+            <form method="POST" id="formProfil" action="/profile">
                 <input type="text" name="Pseudo" id="ModifName" placeholder="Choisissez votre nouveau nom">
                 <textarea name="Description" id="ModifDesc" placeholder="Rédigez votre description" rows="10" cols="70"></textarea>
-                <button id="boutonPost">Modifier</button>
+                <input type="submit" id="boutonPost">Modifier</input>
             </form>
+            {{if .Error}}
+            <p>{{.Error}}</p>
+            {{end}}
         </div>
     </div>
 </body>

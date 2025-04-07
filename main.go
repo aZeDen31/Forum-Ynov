@@ -87,22 +87,115 @@ func modifProfileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func profileHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("test2")
+	// Vérifier si l'utilisateur est connecté
 	if checkCookie(w, r) != 0 {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
+
+	// Traiter la déconnexion et les modifications de profil
 	if r.Method == "POST" {
 		if r.FormValue("action") == "Deconnexion" {
-			fmt.Printf("test")
 			deleteCookie(w, r)
 			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+
+		// Traitement des modifications de profil
+		newPseudo := r.FormValue("Pseudo")
+		newDescription := r.FormValue("Description")
+
+		if newPseudo != "" || newDescription != "" {
+			// Vérifier si le nouveau pseudo est déjà utilisé (seulement si différent)
+			if newPseudo != "" && newPseudo != userdata.Username {
+				_, verif := database.FindUserByNom(DB, newPseudo)
+				if verif == 0 {
+					userdata.Error = "Nom déjà utilisé"
+					tmpl := template.Must(template.ParseFiles("HTML/profilModif.html"))
+					tmpl.Execute(w, userdata)
+					userdata.Error = ""
+					return
+				}
+			}
+
+			// Mise à jour du profil utilisateur
+			err := database.UpdateUserInfo(DB, userdata.ID, newDescription, newPseudo)
+			if err != nil {
+				log.Println("Erreur lors de la mise à jour du profil:", err)
+				http.Error(w, "Erreur lors de la mise à jour du profil", http.StatusInternalServerError)
+				return
+			}
+
+			// Mettre à jour les données utilisateur si le pseudo a changé
+			if newPseudo != "" {
+				userdata.Username = newPseudo
+				// Recréer le cookie avec le nouveau nom
+				deleteCookie(w, r)
+				user, _ := database.FindUserByNom(DB, newPseudo)
+				setUserCookie(user, w, r)
+			}
+
+			// Mettre à jour la description localement
+			if newDescription != "" {
+				userdata.Description = newDescription
+			}
+
+			// Rediriger vers la page de profil mise à jour
+			http.Redirect(w, r, "/profile", http.StatusSeeOther)
+			return
 		}
 	}
 
-	tmpl := template.Must(template.ParseFiles("HTML/profile.html"))
+	// Récupérer la description de l'utilisateur
+	description, err := database.GetUserDescription(DB, userdata.Username)
+	if err != nil {
+		log.Println("Erreur lors de la récupération de la description:", err)
+		// On continue même en cas d'erreur
+		description = ""
+	}
+	userdata.Description = description
 
-	tmpl.Execute(w, userdata)
+	// Récupérer les posts de l'utilisateur
+	posts, err := database.LecturePostAuthor(userdata.Username, DB)
+	if err != nil {
+		log.Println("Erreur lors de la récupération des posts:", err)
+		// On continue avec une liste vide
+		posts = []database.Post{}
+	}
+
+	// Structure de données pour le template
+	Data := struct {
+		Username    string
+		Email       string
+		Description string
+		Posts       []database.Post
+	}{
+		Username:    userdata.Username,
+		Email:       userdata.Email,
+		Description: userdata.Description,
+		Posts:       posts,
+	}
+
+	// Fonctions personnalisées pour le template
+	funcMap := template.FuncMap{
+		"subtract": func(a, b int) int {
+			return a - b
+		},
+	}
+
+	// Créer et exécuter le template
+	tmpl, err := template.New("profile.html").Funcs(funcMap).ParseFiles("HTML/profile.html")
+	if err != nil {
+		log.Println("Erreur lors de l'analyse du template:", err)
+		http.Error(w, "Erreur serveur", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, Data)
+	if err != nil {
+		log.Println("Erreur lors de l'exécution du template:", err)
+		http.Error(w, "Erreur serveur", http.StatusInternalServerError)
+	}
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -114,7 +207,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// j'envoi ça dans index
-	data := struct {
+	Data := struct {
 		Username string
 		Posts    []database.Post
 	}{
@@ -141,7 +234,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Exécuter le template
-	tmpl.Execute(w, data)
+	tmpl.Execute(w, Data)
 }
 
 func threadsHandler(w http.ResponseWriter, r *http.Request) {
@@ -310,6 +403,7 @@ func setUserCookie(user database.Utilisateur, w http.ResponseWriter, r *http.Req
 		HttpOnly: true,
 		MaxAge:   3600, //ttl du cookie
 	}
+	fmt.Println("USERNAME DANS COOKIE:", user.Nom)
 	Write64(w, cookie) //donne le cookie qu'on vient de faire au client
 }
 
@@ -323,11 +417,11 @@ func deleteCookie(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, c)
 }
 func checkCookie(w http.ResponseWriter, r *http.Request) int {
-
 	_, err := r.Cookie("user")
 
 	if err != nil {
 		userdata.Username = "Non connécté"
+		userdata.Email = "" // Réinitialiser l'email aussi
 		switch {
 		case errors.Is(err, http.ErrNoCookie):
 			return 1
@@ -337,10 +431,20 @@ func checkCookie(w http.ResponseWriter, r *http.Request) int {
 			return 2
 		}
 	}
-	username, _ := Read64(r, "user")
 
+	username, _ := Read64(r, "user")
 	userdata.Username = username
 	userdata.ID = database.GetId(DB, userdata.Username)
+
+	// Récupérer les informations complètes de l'utilisateur, y compris l'email
+	user, status := database.FindUserByNom(DB, username)
+	if status == 0 {
+		userdata.Email = user.Email
+	} else {
+		// En cas d'erreur, on pourrait logger mais on continue
+		log.Println("Impossible de récupérer l'email pour", username)
+	}
+
 	return 0
 }
 

@@ -153,20 +153,47 @@ func FindUser(db *sql.DB, email string, mdp string) (Utilisateur, int) { //LOGIN
 
 	return utilisateur, 0
 }
-func FindUserByNom(db *sql.DB, nom string) (Utilisateur, error) {
+func FindUserByNom(db *sql.DB, nom string) (Utilisateur, int) {
 	var utilisateur Utilisateur
 
 	row := db.QueryRow("SELECT id, nom, email, mdp, desc FROM utilisateurs WHERE nom = ?", nom)
-
 	err := row.Scan(&utilisateur.ID, &utilisateur.Nom, &utilisateur.Email, &utilisateur.Mdp, &utilisateur.Desc)
 
-	return utilisateur, err
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Aucun utilisateur trouvé avec ce nom
+			return utilisateur, 1
+		}
+		// Une autre erreur s'est produite
+		return utilisateur, 2
+	}
+
+	// Utilisateur trouvé
+	return utilisateur, 0
 }
 
-func UpdateDesc(db *sql.DB, userID int, desc string) error {
-	query := "UPDATE utilisateurs SET desc = ? WHERE id = ?"
-	_, err := db.Exec(query, desc, userID)
-	return err
+func UpdateUserInfo(db *sql.DB, id int, desc string, name string) error {
+	var query string
+
+	if name == "" && desc != "" {
+		query = "UPDATE utilisateurs SET desc = ? WHERE id = ?"
+
+		_, err := db.Exec(query, desc, id)
+		return err
+	}
+	if name != "" && desc == "" {
+		query = "UPDATE utilisateurs SET nom = ? WHERE id = ?"
+
+		_, err := db.Exec(query, name, id)
+		return err
+	}
+	if name != "" && desc != "" {
+		query = "UPDATE utilisateurs SET nom = ?, desc = ? WHERE id = ?"
+
+		_, err := db.Exec(query, name, desc, id)
+		return err
+	}
+	return nil
 }
 
 // Insertpost insère un nouvel message dans la table "post".
@@ -265,6 +292,17 @@ func GetId(db *sql.DB, name string) int {
 	return id
 }
 
+func GetUserDescription(db *sql.DB, username string) (string, error) {
+	var description string
+
+	query := `SELECT desc FROM utilisateurs WHERE nom = ?`
+	err := db.QueryRow(query, username).Scan(&description)
+	if err != nil {
+		return "", err
+	}
+	return description, nil
+}
+
 // la fonction c pour tes images de con en b64
 func ImageToBase64(imageData []byte) string {
 	return base64.StdEncoding.EncodeToString(imageData)
@@ -280,6 +318,35 @@ func LecturePostThread(thread string, db *sql.DB) ([]Post, error) {
     `
 
 	rows, err := db.Query(query, thread)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+
+	for rows.Next() {
+		var p Post
+		err = rows.Scan(&p.ID, &p.Titre, &p.Text, &p.Thread, &p.Like, &p.Dislike, &p.Image, &p.AuthorName)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+
+	return posts, nil
+}
+
+func LecturePostAuthor(Author string, db *sql.DB) ([]Post, error) {
+	query := `
+        SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom 
+        FROM posts p
+        JOIN utilisateurs u ON p.utilisateur_id = u.id
+        WHERE u.nom = ?
+        ORDER BY p.id DESC
+    `
+
+	rows, err := db.Query(query, Author)
 	if err != nil {
 		return nil, err
 	}

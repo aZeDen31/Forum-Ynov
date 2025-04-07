@@ -39,6 +39,34 @@
                 </div>
             </div>
         </div>
+
+        <div class="posts">
+            {{range .Posts}}
+            <div class="post1">
+                <img src="../img/placeholder-profile.png" alt="plh pp" class="post-profile">
+                <div class="sujet-text-info">
+                    <div class="post-sujet">
+                        <h3>Titre : {{if .Titre}}{{.Titre}}{{else}}Sans titre{{end}} 
+                            {{if .Thread}}<span class="thread-badge">[{{.Thread}}]</span>{{end}}
+                        </h3>
+                    </div>
+                    <div class="post-texte">
+                        <p>{{.Text}}</p>
+                        <div class="post-actions">
+                            <a href="/like/{{.ID}}"><i class="fa-solid fa-caret-up"></i></a>
+                            <p>{{subtract .Like .Dislike}}</p>
+                            <a href="/dislike/{{.ID}}"><i class="fa-solid fa-caret-down"></i></a>
+                        </div>
+                        <h4 class="nom">Posted by: {{.AuthorName}}</h4>
+                    </div>
+                </div>
+            </div>
+            {{else}}
+            <div class="post1">
+                <p>L'utilisateur n'a aucun post.</p>
+            </div>
+            {{end}}
+        </div>
 </body>
 </html>
 <script>
