@@ -12,9 +12,7 @@
     <a href="/" class="lien-logo">
         <img src="../img/2chad-removebg.png" alt="logo" class="logo">
     </a>
-    <p>Récent</p>
-    <p>Contact</p>
-    <p>{{.Username}}</p>
+    <p class="username">{{.Username}}</p>
     <a href="/profile" class="lien-profile">
         <img src="../img/placeholder-profile.png" alt="profile-pic" class="profile-pic">
     </a>
@@ -27,8 +25,9 @@
                 <i class="fa-solid fa-right-to-bracket"></i> Déconnexion
             </button>
         </form>
+        
+        <a href="/profileModif"><button id="boutonModif"><i class="fa-solid fa-pen-to-square"></i> Modifier le profil</button></a>
     </div>
-
         <div id="infosProfil">
             <div id="infosProfil2">
                 <img src="../img/placeholder-profile.png" alt="plhPP">
@@ -40,7 +39,6 @@
                 </div>
             </div>
         </div>
-    </div>
 </body>
 </html>
 <script>

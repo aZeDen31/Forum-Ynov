@@ -11,8 +11,7 @@
     <a href="/" class="lien-logo">
         <img src="../img/2chad-removebg.png" alt="logo" class="logo">
     </a>
-    <p>Récent</p>
-    <p>Contact</p> 
+    <p class="username">{{.Username}}</p>
     <a href="/profile" class="lien-profile">
         <img src="../img/placeholder-profile.png" alt="profile-pic" class="profile-pic">
     </a>
@@ -24,6 +23,7 @@
             <form method="POST" id="formPost">
                 <input type="text" name="Titre" id="titleNewPost" placeholder="Entrez le titre de votre post">
                 <textarea name="Contenu" id="contenuPost" placeholder="Rédigez le contenu de votre post" rows="10" cols="70"></textarea>
+                <div id="valise"><section class="valise">Déposez votre image ici</section></div>
                 <select name="pets" id="threadSelect">
                     <option value="">Veuillez choisir le thread</option>
                     <option value="manga">Manga</option>
