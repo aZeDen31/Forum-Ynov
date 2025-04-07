@@ -7,8 +7,11 @@ import (
 	"fmt"
 	"forum-ynov/database"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -29,6 +32,7 @@ type UserData struct {
 var userdata UserData
 
 func main() {
+	os.MkdirAll("uploads", os.ModePerm)
 	// Initialisation de la base de données
 	userdata.Username = "Non connecté"
 	userdata.ID = 0 //si ID = 0 user non connécté
@@ -68,6 +72,7 @@ func server() {
 	http.HandleFunc("/createpost", createpostHandler)
 	http.HandleFunc("/like/", LikeHandler)
 	http.HandleFunc("/dislike/", DislikeHandler)
+	http.HandleFunc("/upload", uploadHandler)
 
 	fmt.Println("clique sur le lien http://localhost:5500/")
 	if err := http.ListenAndServe(":5500", nil); err != nil {
@@ -224,6 +229,55 @@ func createpostHandler(w http.ResponseWriter, r *http.Request) {
 		Error:    r.URL.Query().Get("error"),
 	}
 	tmpl.Execute(w, data)
+}
+
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, "Erreur lors du parsing du formulaire", http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Fichier non trouvé", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	filename := filepath.Base(handler.Filename)
+	savePath := filepath.Join("uploads", filename)
+
+	dst, err := os.Create(savePath)
+	if err != nil {
+		http.Error(w, "Erreur lors de la sauvegarde du fichier", http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, file)
+	if err != nil {
+		http.Error(w, "Erreur lors de la copie du fichier", http.StatusInternalServerError)
+		return
+	}
+
+	err = saveImagePathToDB(savePath)
+	if err != nil {
+		http.Error(w, "Erreur BDD", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte("Image reçue et enregistrée !"))
+}
+
+func saveImagePathToDB(path string) error {
+	_, err := DB.Exec(`INSERT INTO images (path) VALUES (?)`, path)
+	return err
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
