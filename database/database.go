@@ -69,6 +69,7 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	//je vérifie la si les tables que j'ai ajouter elles existent sinon je  les adds
 	_, err = db.Exec("PRAGMA table_info(posts)")
 	if err != nil {
