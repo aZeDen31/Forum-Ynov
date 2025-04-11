@@ -367,3 +367,7 @@ body{
     display: flex;
     justify-content: space-between;
 }
+
+.postButtons{
+    padding: 20px;
+}

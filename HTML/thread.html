@@ -24,6 +24,14 @@
         <p>Bienvenue sur le thread dédié au {{.Thread}}. Merci de ne poster ici que des articles en rapport avec le sujet du thread.</p>
     </div>
     
+    <div class="indexButtons">
+        <form action="/createpost" method="POST">
+            <button id="addButton" class="postButtons" type="submit">
+                <i class="fa-solid fa-plus"></i> Ajouter un post
+            </button>
+            </form>
+    </div>
+
     <div class="posts">
         {{range .Posts}}
         <div class="post1">
