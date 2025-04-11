@@ -379,3 +379,7 @@ body{
     height: 150px;
     object-fit: cover;
 }
+
+.postButtons{
+    margin: 30px;
+}

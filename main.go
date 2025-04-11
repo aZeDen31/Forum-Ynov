@@ -523,7 +523,7 @@ func checkCookie(w http.ResponseWriter, r *http.Request) int {
 	_, err := r.Cookie("user")
 
 	if err != nil {
-		userdata.Username = "Non connécté"
+		userdata.Username = "Non connecté"
 		userdata.Email = "" // Réinitialiser l'email aussi
 		switch {
 		case errors.Is(err, http.ErrNoCookie):
