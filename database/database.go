@@ -11,25 +11,26 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Utilisateur représente un utilisateur de la base de données.
 type Utilisateur struct {
-	ID    int
-	Nom   string
-	Email string
-	Mdp   string
-	Desc  string
-	Posts []Post
+	ID           int
+	Nom          string
+	Email        string
+	Mdp          string
+	Desc         string
+	ProfileImage string
+	Posts        []Post
 }
 
 type Post struct {
-	ID         int
-	Titre      string
-	Text       string
-	Thread     string
-	Like       int
-	Dislike    int
-	Image      []byte
-	AuthorName string //j'ai ajouter des champs chef il en manquait
+	ID           int
+	Titre        string
+	Text         string
+	Thread       string
+	Like         int
+	Dislike      int
+	Image        []byte
+	AuthorName   string
+	ProfileImage string
 }
 
 // InitDB initialise la base de données et crée la table "utilisateurs" si elle n'existe pas.
@@ -83,6 +84,8 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	db.Exec("ALTER TABLE posts ADD COLUMN liked_by TEXT DEFAULT ''")
 
 	db.Exec("ALTER TABLE posts ADD COLUMN disliked_by TEXT DEFAULT ''")
+
+	db.Exec("ALTER TABLE utilisateurs ADD COLUMN profile_image TEXT DEFAULT 'img/placeholder-profile.png'")
 
 	// Vérifier la connexion
 	err = db.Ping()
@@ -173,27 +176,41 @@ func FindUserByNom(db *sql.DB, nom string) (Utilisateur, int) {
 	return utilisateur, 0
 }
 
-func UpdateUserInfo(db *sql.DB, id int, desc string, name string) error {
+func UpdateUserInfo(db *sql.DB, id int, desc string, name string, profileImage string) error {
 	var query string
+	var args []interface{}
 
-	if name == "" && desc != "" {
-		query = "UPDATE utilisateurs SET desc = ? WHERE id = ?"
+	// Si tout est vide, rien à faire
+	if name == "" && desc == "" && profileImage == "" {
+		return nil
+	}
 
-		_, err := db.Exec(query, desc, id)
+	// Construire la requête dynamiquement
+	queryParts := []string{}
+
+	if desc != "" {
+		queryParts = append(queryParts, "desc = ?")
+		args = append(args, desc)
+	}
+
+	if name != "" {
+		queryParts = append(queryParts, "nom = ?")
+		args = append(args, name)
+	}
+
+	if profileImage != "" {
+		queryParts = append(queryParts, "profile_image = ?")
+		args = append(args, profileImage)
+	}
+
+	if len(queryParts) > 0 {
+		query = "UPDATE utilisateurs SET " + strings.Join(queryParts, ", ") + " WHERE id = ?"
+		args = append(args, id)
+
+		_, err := db.Exec(query, args...)
 		return err
 	}
-	if name != "" && desc == "" {
-		query = "UPDATE utilisateurs SET nom = ? WHERE id = ?"
 
-		_, err := db.Exec(query, name, id)
-		return err
-	}
-	if name != "" && desc != "" {
-		query = "UPDATE utilisateurs SET nom = ?, desc = ? WHERE id = ?"
-
-		_, err := db.Exec(query, name, desc, id)
-		return err
-	}
 	return nil
 }
 
@@ -251,18 +268,12 @@ func Insertdislike(db *sql.DB, postID int, username string) error {
 }
 
 // InsertPostWithImage insère une image dans la table "post".
-func InsertPostWithImage(db *sql.DB, utilisateurID int, imageData []byte) error {
-	query := "INSERT INTO posts (utilisateur_id, image) VALUES (?, ?, ?)"
-	_, err := db.Exec(query, utilisateurID, imageData)
-	return err
-}
-
 func LecturePost(db *sql.DB) ([]Post, error) {
 	query := `
-    SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom 
-    FROM posts p
-    JOIN utilisateurs u ON p.utilisateur_id = u.id
-    ORDER BY p.id DESC
+        SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom, u.profile_image 
+        FROM posts p
+        JOIN utilisateurs u ON p.utilisateur_id = u.id
+        ORDER BY p.id DESC
     `
 
 	rows, err := db.Query(query)
@@ -275,7 +286,8 @@ func LecturePost(db *sql.DB) ([]Post, error) {
 
 	for rows.Next() {
 		var p Post
-		err = rows.Scan(&p.ID, &p.Titre, &p.Text, &p.Thread, &p.Like, &p.Dislike, &p.Image, &p.AuthorName)
+		// Ajout de la lecture de u.profile_image
+		err = rows.Scan(&p.ID, &p.Titre, &p.Text, &p.Thread, &p.Like, &p.Dislike, &p.Image, &p.AuthorName, &p.ProfileImage)
 		if err != nil {
 			return nil, err
 		}
@@ -311,13 +323,12 @@ func ImageToBase64(imageData []byte) string {
 
 func LecturePostThread(thread string, db *sql.DB) ([]Post, error) {
 	query := `
-        SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom 
+        SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom, u.profile_image
         FROM posts p
         JOIN utilisateurs u ON p.utilisateur_id = u.id
         WHERE p.thread = ?
         ORDER BY p.id DESC
     `
-
 	rows, err := db.Query(query, thread)
 	if err != nil {
 		return nil, err
@@ -328,7 +339,7 @@ func LecturePostThread(thread string, db *sql.DB) ([]Post, error) {
 
 	for rows.Next() {
 		var p Post
-		err = rows.Scan(&p.ID, &p.Titre, &p.Text, &p.Thread, &p.Like, &p.Dislike, &p.Image, &p.AuthorName)
+		err = rows.Scan(&p.ID, &p.Titre, &p.Text, &p.Thread, &p.Like, &p.Dislike, &p.Image, &p.AuthorName, &p.ProfileImage)
 		if err != nil {
 			return nil, err
 		}
@@ -337,17 +348,15 @@ func LecturePostThread(thread string, db *sql.DB) ([]Post, error) {
 
 	return posts, nil
 }
-
-func LecturePostAuthor(Author string, db *sql.DB) ([]Post, error) {
+func LecturePostAuthor(author string, db *sql.DB) ([]Post, error) {
 	query := `
-        SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom 
+        SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom, u.profile_image
         FROM posts p
         JOIN utilisateurs u ON p.utilisateur_id = u.id
         WHERE u.nom = ?
         ORDER BY p.id DESC
     `
-
-	rows, err := db.Query(query, Author)
+	rows, err := db.Query(query, author)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +366,7 @@ func LecturePostAuthor(Author string, db *sql.DB) ([]Post, error) {
 
 	for rows.Next() {
 		var p Post
-		err = rows.Scan(&p.ID, &p.Titre, &p.Text, &p.Thread, &p.Like, &p.Dislike, &p.Image, &p.AuthorName)
+		err = rows.Scan(&p.ID, &p.Titre, &p.Text, &p.Thread, &p.Like, &p.Dislike, &p.Image, &p.AuthorName, &p.ProfileImage)
 		if err != nil {
 			return nil, err
 		}
@@ -365,4 +374,11 @@ func LecturePostAuthor(Author string, db *sql.DB) ([]Post, error) {
 	}
 
 	return posts, nil
+}
+
+func GetUserProfile(db *sql.DB, username string) (Utilisateur, error) {
+	var user Utilisateur
+	query := `SELECT id, nom, email, desc, COALESCE(profile_image, 'img/placeholder-profile.png') FROM utilisateurs WHERE nom = ?`
+	err := db.QueryRow(query, username).Scan(&user.ID, &user.Nom, &user.Email, &user.Desc, &user.ProfileImage)
+	return user, err
 }

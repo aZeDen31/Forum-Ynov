@@ -63,6 +63,9 @@ func server() {
 	fd := http.FileServer(http.Dir("./img"))
 	http.Handle("/img/", http.StripPrefix("/img/", fd))
 
+	uploads := http.FileServer(http.Dir("./uploads"))
+	http.Handle("/uploads/", http.StripPrefix("/uploads/", uploads))
+
 	http.HandleFunc("/", IndexHandler)
 	http.HandleFunc("/profileModif", modifProfileHandler)
 	http.HandleFunc("/login", LoginPage)
@@ -75,7 +78,7 @@ func server() {
 	http.HandleFunc("/upload", uploadHandler)
 
 	fmt.Println("clique sur le lien http://localhost:5500/")
-	if err := http.ListenAndServe(":5500", nil); err != nil {
+	if err := http.ListenAndServe(":5400", nil); err != nil {
 		panic(err)
 	}
 }
@@ -94,6 +97,7 @@ func modifProfileHandler(w http.ResponseWriter, r *http.Request) {
 func profileHandler(w http.ResponseWriter, r *http.Request) {
 	// Vérifier si l'utilisateur est connecté
 	if checkCookie(w, r) != 0 {
+
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
@@ -106,59 +110,102 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Parser le formulaire multipart pour pouvoir récupérer l'image
+		err := r.ParseMultipartForm(10 << 20) // 10 MB max
+		if err != nil && !errors.Is(err, http.ErrNotMultipart) {
+			log.Println("Erreur lors du parsing du formulaire:", err)
+		}
+
 		// Traitement des modifications de profil
 		newPseudo := r.FormValue("Pseudo")
 		newDescription := r.FormValue("Description")
 
-		if newPseudo != "" || newDescription != "" {
-			// Vérifier si le nouveau pseudo est déjà utilisé (seulement si différent)
-			if newPseudo != "" && newPseudo != userdata.Username {
-				_, verif := database.FindUserByNom(DB, newPseudo)
-				if verif == 0 {
-					userdata.Error = "Nom déjà utilisé"
-					tmpl := template.Must(template.ParseFiles("HTML/profilModif.html"))
-					tmpl.Execute(w, userdata)
-					userdata.Error = ""
-					return
-				}
-			}
+		// Variables pour gérer l'image de profil
+		var profileImagePath string
+		var profileImageUpdated bool
 
-			// Mise à jour du profil utilisateur
-			err := database.UpdateUserInfo(DB, userdata.ID, newDescription, newPseudo)
-			if err != nil {
-				log.Println("Erreur lors de la mise à jour du profil:", err)
-				http.Error(w, "Erreur lors de la mise à jour du profil", http.StatusInternalServerError)
+		// Récupérer l'image de profil s'il y en a une
+		file, handler, err := r.FormFile("profileImage")
+		if err == nil {
+			defer file.Close()
+
+			// Créer le dossier profiles s'il n'existe pas
+			os.MkdirAll("uploads/profiles", os.ModePerm)
+
+			// Générer un nom unique pour l'image
+			fileExt := filepath.Ext(handler.Filename)
+			newFilename := fmt.Sprintf("%d_%s%s", userdata.ID, time.Now().Format("20060102150405"), fileExt)
+			profileImagePath = filepath.Join("uploads/profiles", newFilename)
+
+			dst, err := os.Create(profileImagePath)
+			if err == nil {
+				defer dst.Close()
+				if _, err := io.Copy(dst, file); err == nil {
+					profileImageUpdated = true
+				} else {
+					log.Println("Erreur lors de la copie de l'image:", err)
+				}
+			} else {
+				log.Println("Erreur lors de la création du fichier:", err)
+			}
+		}
+
+		// Vérifications pour le nouveau pseudo
+		if newPseudo != "" && newPseudo != userdata.Username {
+			_, verif := database.FindUserByNom(DB, newPseudo)
+			if verif == 0 {
+				userdata.Error = "Nom déjà utilisé"
+				tmpl := template.Must(template.ParseFiles("HTML/profilModif.html"))
+				tmpl.Execute(w, userdata)
+				userdata.Error = ""
 				return
 			}
+		}
 
-			// Mettre à jour les données utilisateur si le pseudo a changé
-			if newPseudo != "" {
-				userdata.Username = newPseudo
-				// Recréer le cookie avec le nouveau nom
-				deleteCookie(w, r)
-				user, _ := database.FindUserByNom(DB, newPseudo)
-				setUserCookie(user, w, r)
-			}
+		var imagePathToUpdate string
+		if profileImageUpdated {
+			imagePathToUpdate = profileImagePath
+		} else {
+			imagePathToUpdate = ""
+		}
 
-			// Mettre à jour la description localement
-			if newDescription != "" {
-				userdata.Description = newDescription
-			}
+		err = database.UpdateUserInfo(DB, userdata.ID, newDescription, newPseudo, imagePathToUpdate)
 
-			// Rediriger vers la page de profil mise à jour
-			http.Redirect(w, r, "/profile", http.StatusSeeOther)
+		if err != nil {
+			log.Println("Erreur lors de la mise à jour du profil:", err)
+			http.Error(w, "Erreur lors de la mise à jour du profil", http.StatusInternalServerError)
 			return
 		}
+
+		// Mettre à jour les données utilisateur si le pseudo a changé
+		if newPseudo != "" {
+			userdata.Username = newPseudo
+			// Recréer le cookie avec le nouveau nom
+			deleteCookie(w, r)
+			user, _ := database.FindUserByNom(DB, newPseudo)
+			setUserCookie(user, w, r)
+		}
+
+		// Mettre à jour la description localement
+		if newDescription != "" {
+			userdata.Description = newDescription
+		}
+
+		// Rediriger vers la page de profil mise à jour
+		http.Redirect(w, r, "/profile", http.StatusSeeOther)
+		return
 	}
 
-	// Récupérer la description de l'utilisateur
-	description, err := database.GetUserDescription(DB, userdata.Username)
+	// Récupérer la description et l'image de profil de l'utilisateur
+	user, err := database.GetUserProfile(DB, userdata.Username)
 	if err != nil {
-		log.Println("Erreur lors de la récupération de la description:", err)
-		// On continue même en cas d'erreur
-		description = ""
+		log.Println("Erreur lors de la récupération du profil:", err)
+		// On continue avec des valeurs par défaut
+		userdata.Description = ""
+	} else {
+		userdata.Description = user.Desc
+		// On pourra ajouter l'image de profil aussi ici
 	}
-	userdata.Description = description
 
 	// Récupérer les posts de l'utilisateur
 	posts, err := database.LecturePostAuthor(userdata.Username, DB)
@@ -170,15 +217,17 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Structure de données pour le template
 	Data := struct {
-		Username    string
-		Email       string
-		Description string
-		Posts       []database.Post
+		Username     string
+		Email        string
+		Description  string
+		ProfileImage string
+		Posts        []database.Post
 	}{
-		Username:    userdata.Username,
-		Email:       userdata.Email,
-		Description: userdata.Description,
-		Posts:       posts,
+		Username:     userdata.Username,
+		Email:        userdata.Email,
+		Description:  userdata.Description,
+		ProfileImage: user.ProfileImage, // Nouveau champ
+		Posts:        posts,
 	}
 
 	// Fonctions personnalisées pour le template
@@ -293,7 +342,7 @@ func createpostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		titre := r.FormValue("Titre")
 		contenu := r.FormValue("Contenu")
-		thread := r.FormValue("pets") // Le nom du champ select est "pets" dans ton HTML
+		thread := r.FormValue("pets") 
 
 		// Vérifier que les champs requis sont remplis
 		if titre == "" || contenu == "" || thread == "" {

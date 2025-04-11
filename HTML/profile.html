@@ -14,7 +14,6 @@
     <p class="username">{{.Username}}</p>
     <a href="/profile" class="lien-profile">
         <img src="../img/placeholder-profile.png" alt="profile-pic" class="profile-pic">
-    </a>
 </header>
 <body>
     <div id="bodyProfile">
@@ -27,48 +26,47 @@
         
         <a href="/profileModif"><button id="boutonModif"><i class="fa-solid fa-pen-to-square"></i> Modifier le profil</button></a>
     </div>
-        <div id="infosProfil">
-            <div id="infosProfil2">
-                <img src="../img/placeholder-profile.png" alt="plhPP">
-                <div id="texteProfil">
-                    <h3>{{.Username}}</h3>
-                    <h3>{{.Email}}</h3>
-                    <h4>Description :</h4>
-                    <p>{{.Description}}</p>
-                </div>
+    <div id="infosProfil">
+        <div id="infosProfil2">
+            <img src="/{{if .ProfileImage}}{{.ProfileImage}}{{else}}img/placeholder-profile.png{{end}}" alt="profile-pic">
+            <div id="texteProfil">
+                <h3>{{.Username}}</h3>
+                <h3>{{.Email}}</h3>
+                <h4>Description :</h4>
+                <p>{{.Description}}</p>
             </div>
         </div>
+    </div>
 
-        <div class="posts">
-            {{range .Posts}}
-            <div class="post1">
-                <img src="../img/placeholder-profile.png" alt="plh pp" class="post-profile">
-                <div class="sujet-text-info">
-                    <div class="post-sujet">
-                        <h3>Titre : {{if .Titre}}{{.Titre}}{{else}}Sans titre{{end}} 
-                            {{if .Thread}}<span class="thread-badge">[{{.Thread}}]</span>{{end}}
-                        </h3>
+    <div class="posts">
+        {{range .Posts}}
+        <div class="post1">
+            <img src="/{{if .ProfileImage}}{{.ProfileImage}}{{else}}img/placeholder-profile.png{{end}}" alt="{{.AuthorName}} profile" class="post-profile">
+            <div class="sujet-text-info">
+                <div class="post-sujet">
+                    <h3>
+                        Titre : {{if .Titre}}{{.Titre}}{{else}}Sans titre{{end}} 
+                        {{if .Thread}}<span class="thread-badge">[{{.Thread}}]</span>{{end}}
+                    </h3>
+                </div>
+                <div class="post-texte">
+                    <p>{{.Text}}</p>
+                    <div class="post-actions">
+                        <a href="/like/{{.ID}}"><i class="fa-solid fa-caret-up"></i></a>
+                        <p>{{subtract .Like .Dislike}}</p>
+                        <a href="/dislike/{{.ID}}"><i class="fa-solid fa-caret-down"></i></a>
                     </div>
-                    <div class="post-texte">
-                        <p>{{.Text}}</p>
-                        <div class="post-actions">
-                            <a href="/like/{{.ID}}"><i class="fa-solid fa-caret-up"></i></a>
-                            <p>{{subtract .Like .Dislike}}</p>
-                            <a href="/dislike/{{.ID}}"><i class="fa-solid fa-caret-down"></i></a>
-                        </div>
-                        <h4 class="nom">Posted by: {{.AuthorName}}</h4>
-                    </div>
+                    <h4 class="nom">Posted by: {{.AuthorName}}</h4>
                 </div>
             </div>
-            {{else}}
-            <div class="post1">
-                <p>L'utilisateur n'a aucun post.</p>
-            </div>
-            {{end}}
         </div>
+        {{else}}
+        <div class="post1">
+            <p>L'utilisateur n'a aucun post.</p>
+        </div>
+        {{end}}
+    </div>
 </body>
 </html>
 <script>
-
-
 </script>

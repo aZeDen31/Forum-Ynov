@@ -24,21 +24,21 @@
             <div class="thread">
                 <h4>Jeux Videos</h4>
                 <a href="/threads?name=JV">
-                <img src="../img/imgJV.jpg" alt="imgJV"></a>
+                <img src="../img/JV.png" alt="imgJV"></a>
                 <p>Un thread dédié aux jeux de Chad</p>
             </div>
 
             <div class="thread">
                 <h4>Sport</h4>
                 <a href="/threads?name=sport">
-                <img src="../img/imgSport.png" alt="imgSport"></a>
+                <img src="../img/sport.png" alt="imgSport"></a>
                 <p>Un thread dédié aux sports de Chad</p>
             </div>
 
             <div class="thread">
                 <h4>Mangas</h4>
                 <a href="/threads?name=manga">
-                <img src="../img/imgManga.jpg" alt="imgManga"></a>
+                <img src="../img/manga.png" alt="imgManga"></a>
                 <p>Un thread dédié aux mangas de Chad</p>
             </div>
         </div>
@@ -53,7 +53,7 @@
     <div class="posts">
         {{range .Posts}}
         <div class="post1">
-            <img src="../img/placeholder-profile.png" alt="plh pp" class="post-profile">
+            <img src="/{{.ProfileImage}}" alt="{{.AuthorName}} profile" class="post-profile">
             <div class="sujet-text-info">
                 <div class="post-sujet">
                     <h3>Titre : {{if .Titre}}{{.Titre}}{{else}}Sans titre{{end}} 
@@ -77,5 +77,6 @@
         </div>
         {{end}}
     </div>
+    
 </body>
 </html>
