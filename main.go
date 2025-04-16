@@ -32,7 +32,7 @@ type UserData struct {
 var userdata UserData
 
 func main() {
-	os.MkdirAll("uploads", os.ModePerm)
+	os.MkdirAll("uploads", os.ModePerm) //On fait le fichier uploads
 	// Initialisation de la base de données
 	userdata.Username = "Non connecté"
 	userdata.ID = 0 //si ID = 0 user non connécté
@@ -77,7 +77,7 @@ func server() {
 	http.HandleFunc("/dislike/", DislikeHandler)
 	http.HandleFunc("/upload", uploadHandler)
 
-	fmt.Println("clique sur le lien http://localhost:5500/")
+	fmt.Println("clique sur le lien http://localhost:5400/")
 	if err := http.ListenAndServe(":5400", nil); err != nil {
 		panic(err)
 	}
@@ -342,7 +342,7 @@ func createpostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		titre := r.FormValue("Titre")
 		contenu := r.FormValue("Contenu")
-		thread := r.FormValue("pets") 
+		thread := r.FormValue("pets")
 
 		// Vérifier que les champs requis sont remplis
 		if titre == "" || contenu == "" || thread == "" {
@@ -358,7 +358,7 @@ func createpostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, "/threads?name="+thread, http.StatusSeeOther) // Rediriger vers la page des threads
 		return
 	}
 

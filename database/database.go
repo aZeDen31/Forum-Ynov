@@ -273,7 +273,7 @@ func LecturePost(db *sql.DB) ([]Post, error) {
         SELECT p.id, p.titre, p.text, p.thread, p.like, p.dislike, p.image, u.nom, u.profile_image 
         FROM posts p
         JOIN utilisateurs u ON p.utilisateur_id = u.id
-        ORDER BY p.id DESC
+        ORDER BY (p.like - p.dislike) DESC, p.id DESC
     `
 
 	rows, err := db.Query(query)
@@ -327,7 +327,7 @@ func LecturePostThread(thread string, db *sql.DB) ([]Post, error) {
         FROM posts p
         JOIN utilisateurs u ON p.utilisateur_id = u.id
         WHERE p.thread = ?
-        ORDER BY p.id DESC
+        ORDER BY (p.like - p.dislike) DESC, p.id DESC
     `
 	rows, err := db.Query(query, thread)
 	if err != nil {
@@ -354,7 +354,7 @@ func LecturePostAuthor(author string, db *sql.DB) ([]Post, error) {
         FROM posts p
         JOIN utilisateurs u ON p.utilisateur_id = u.id
         WHERE u.nom = ?
-        ORDER BY p.id DESC
+        ORDER BY (p.like - p.dislike) DESC, p.id DESC
     `
 	rows, err := db.Query(query, author)
 	if err != nil {
